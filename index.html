@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Gravity Line</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="ui-top">
+            <div id="score">Score: 0</div>
+            <div id="gravity-indicator">
+                <div id="gravity-arrow"></div>
+            </div>
+        </div>
+
+        <canvas id="game-canvas"></canvas>
+
+        <div id="ui-bottom">
+            <div id="next-label">Next:</div>
+            <canvas id="preview-canvas"></canvas>
+        </div>
+    </div>
+
+    <div id="game-over" class="hidden">
+        <h1>Game Over</h1>
+        <p id="final-score">Score: 0</p>
+        <button id="restart-btn">Restart</button>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/block.js"></script>
+    <script src="js/board.js"></script>
+    <script src="js/gravity.js"></script>
+    <script src="js/input.js"></script>
+    <script src="js/render.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
