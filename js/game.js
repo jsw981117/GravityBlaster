@@ -131,13 +131,13 @@ class Game {
     }
 
     // 스와이프 입력 처리
-    onSwipe(direction) {
+    async onSwipe(direction) {
         if (this.state !== 'waiting' || this.paused) return;
 
         this.state = 'animating';
 
-        // 턴 처리
-        const chain = this.processTurn(direction);
+        // 턴 처리 (애니메이션 포함)
+        const chain = await this.processTurn(direction);
 
         // 점수 계산
         this.addScore(chain);
@@ -156,13 +156,13 @@ class Game {
         this.render();
     }
 
-    // 턴 처리 (중력 + 연쇄)
-    processTurn(direction) {
+    // 턴 처리 (중력 + 연쇄) - 애니메이션 포함
+    async processTurn(direction) {
         let chain = 0;
 
         while (true) {
             // 중력 적용
-            this.gravity.apply(direction);
+            await this.applyGravityWithAnimation(direction);
 
             // 라인 판정
             const lines = this.board.findCompletedLines();
@@ -171,12 +171,63 @@ class Game {
             // 라인 제거
             this.board.removeLines(lines);
             chain++;
+
+            // 제거 후 딜레이
+            await this.delay(100);
         }
 
         // UI 업데이트
         this.ui.updateGravityIndicator(direction);
 
         return chain;
+    }
+
+    // 중력을 애니메이션과 함께 적용
+    async applyGravityWithAnimation(direction) {
+        // 일반 블록 분해
+        this.gravity.splitNormalBlocks();
+
+        let moved = true;
+        while (moved) {
+            moved = false;
+
+            // 한 스텝 이동
+            const normalBlocks = this.board.blocks.filter(b => b.type === 'normal');
+            for (let block of normalBlocks) {
+                const [y, x] = block.shape[0];
+                const [ny, nx] = this.gravity.getNextPosition(y, x, direction);
+
+                if (this.gravity.canMove(y, x, ny, nx, block.id)) {
+                    block.shape[0] = [ny, nx];
+                    moved = true;
+                }
+            }
+
+            const steelBlocks = this.board.blocks.filter(b => b.type === 'steel');
+            for (let block of steelBlocks) {
+                if (this.gravity.canMoveBlock(block, direction)) {
+                    for (let i = 0; i < block.shape.length; i++) {
+                        const [y, x] = block.shape[i];
+                        const [ny, nx] = this.gravity.getNextPosition(y, x, direction);
+                        block.shape[i] = [ny, nx];
+                    }
+                    moved = true;
+                }
+            }
+
+            this.board.updateGrid();
+            this.render();
+
+            // 이동했으면 애니메이션 딜레이
+            if (moved) {
+                await this.delay(100);
+            }
+        }
+    }
+
+    // 딜레이 헬퍼
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     // 예고 블록 실제 생성
