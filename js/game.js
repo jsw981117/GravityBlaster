@@ -202,12 +202,9 @@ class Game {
             const lines = this.board.findCompletedLines();
             if (lines.length === 0) break;
 
-            // 라인 제거
-            this.board.removeLines(lines);
+            // 라인 제거 애니메이션
+            await this.removeLinesWithAnimation(lines);
             chain++;
-
-            // 제거 후 딜레이
-            await this.delay(100);
         }
 
         // UI 업데이트
@@ -286,6 +283,35 @@ class Game {
                 });
             }
         }
+    }
+
+    // 라인 제거 애니메이션
+    async removeLinesWithAnimation(lines) {
+        if (lines.length === 0) return;
+
+        // 제거될 셀 정보 가져오기
+        const cellsToRemove = this.board.getLineCells(lines);
+
+        // 0.2초 동안 축소 애니메이션
+        const duration = 200;
+        const startTime = Date.now();
+
+        while (Date.now() - startTime < duration) {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const scale = 1.0 - progress; // 1.0 -> 0.0
+
+            // 보드 먼저 그리고, 제거될 셀은 스케일로 덮어그리기
+            this.renderer.renderBoard(this.board, this.currentPreview);
+            this.renderer.drawScaledCells(cellsToRemove, scale);
+
+            if (progress < 1) {
+                await this.nextFrame();
+            }
+        }
+
+        // 실제 제거
+        this.board.removeLines(lines);
     }
 
     // 다음 프레임 대기

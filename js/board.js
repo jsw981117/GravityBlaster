@@ -113,6 +113,54 @@ class Board {
         return lines;
     }
 
+    // 제거될 셀 정보 가져오기 (애니메이션용)
+    getLineCells(lines) {
+        const toRemove = new Set();
+        const bombsToExplode = [];
+        const cellData = [];
+
+        // 제거할 칸 수집
+        for (let line of lines) {
+            if (line.type === 'row') {
+                for (let x = 0; x < 8; x++) {
+                    toRemove.add(`${line.index},${x}`);
+                    if (this.grid[line.index][x]?.isBomb) {
+                        bombsToExplode.push([line.index, x]);
+                    }
+                }
+            } else {
+                for (let y = 0; y < 8; y++) {
+                    toRemove.add(`${y},${line.index}`);
+                    if (this.grid[y][line.index]?.isBomb) {
+                        bombsToExplode.push([y, line.index]);
+                    }
+                }
+            }
+        }
+
+        // 폭탄 폭발 처리 (주변 8칸)
+        for (let [by, bx] of bombsToExplode) {
+            const neighbors = getNeighbors8(by, bx);
+            for (let [ny, nx] of neighbors) {
+                toRemove.add(`${ny},${nx}`);
+            }
+        }
+
+        // Set을 배열로 변환하고 셀 정보 추가
+        for (let key of toRemove) {
+            const [y, x] = key.split(',').map(Number);
+            if (this.grid[y] && this.grid[y][x]) {
+                cellData.push({
+                    y, x,
+                    color: this.grid[y][x].color,
+                    isBomb: this.grid[y][x].isBomb
+                });
+            }
+        }
+
+        return cellData;
+    }
+
     // 라인 제거
     removeLines(lines) {
         const toRemove = new Set(); // [y, x] 문자열 형태로 저장

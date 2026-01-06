@@ -62,17 +62,21 @@ class Renderer {
     }
 
     // 셀 그리기
-    drawCell(x, y, color, isBomb = false) {
+    drawCell(x, y, color, isBomb = false, scale = 1.0) {
         const px = x * this.cellSize;
         const py = y * this.cellSize;
         const padding = 2;
 
+        const centerX = px + this.cellSize / 2;
+        const centerY = py + this.cellSize / 2;
+        const size = (this.cellSize - padding * 2) * scale;
+
         this.ctx.fillStyle = color;
         this.ctx.fillRect(
-            px + padding,
-            py + padding,
-            this.cellSize - padding * 2,
-            this.cellSize - padding * 2
+            centerX - size / 2,
+            centerY - size / 2,
+            size,
+            size
         );
 
         // 폭탄 표시
@@ -80,13 +84,20 @@ class Renderer {
             this.ctx.fillStyle = '#ff0000';
             this.ctx.beginPath();
             this.ctx.arc(
-                px + this.cellSize / 2,
-                py + this.cellSize / 2,
-                this.cellSize / 6,
+                centerX,
+                centerY,
+                (this.cellSize / 6) * scale,
                 0,
                 Math.PI * 2
             );
             this.ctx.fill();
+        }
+    }
+
+    // 스케일된 셀들 렌더링 (제거 애니메이션용)
+    drawScaledCells(cells, scale) {
+        for (let cell of cells) {
+            this.drawCell(cell.x, cell.y, cell.color, cell.isBomb, scale);
         }
     }
 
