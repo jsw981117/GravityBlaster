@@ -18,6 +18,7 @@ class Game {
         this.score = 0;
         this.previewBlocks = []; // 다음에 생성될 블록들
         this.currentPreview = []; // 현재 보드에 표시할 예고
+        this.inputQueue = []; // 입력 큐
 
         this.init();
     }
@@ -153,6 +154,12 @@ class Game {
 
     // 스와이프 입력 처리
     async onSwipe(direction) {
+        // 애니메이션 중이면 큐에 추가
+        if (this.state === 'animating') {
+            this.inputQueue.push(direction);
+            return;
+        }
+
         if (this.state !== 'waiting' || this.paused) return;
 
         this.state = 'animating';
@@ -175,6 +182,12 @@ class Game {
         }
 
         this.render();
+
+        // 큐에 대기 중인 입력 처리
+        if (this.inputQueue.length > 0) {
+            const nextDirection = this.inputQueue.shift();
+            this.onSwipe(nextDirection);
+        }
     }
 
     // 턴 처리 (중력 + 연쇄) - 애니메이션 포함
