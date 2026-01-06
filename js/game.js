@@ -218,15 +218,18 @@ class Game {
 
     // 중력을 애니메이션과 함께 적용
     async applyGravityWithAnimation(direction) {
-        // 1. 시작 위치 저장
+        // 1. 일반 블록 분해 (ID 변경되므로 먼저 실행)
+        this.gravity.splitNormalBlocks();
+
+        // 2. 시작 위치 저장
         const startPositions = this.saveBlockPositions();
 
-        // 2. 최종 위치 즉시 계산
+        // 3. 최종 위치 즉시 계산
         this.gravity.apply(direction);
         const endPositions = this.saveBlockPositions();
 
-        // 3. 0.1초 동안 보간 애니메이션
-        const duration = 100;
+        // 4. 0.2초 동안 보간 애니메이션
+        const duration = 200;
         const startTime = Date.now();
 
         while (Date.now() - startTime < duration) {
