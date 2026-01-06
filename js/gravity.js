@@ -16,17 +16,28 @@ class Gravity {
         do {
             moved = false;
 
-            // 일반 블록만 이동 (강철은 고정)
+            // 일반 블록 이동 (1x1 개별 이동)
             const normalBlocks = this.board.blocks.filter(b => b.type === 'normal');
-
             for (let block of normalBlocks) {
-                // 블록의 각 칸을 이동 시도 (일반 블록은 1x1이므로 1칸만)
                 const [y, x] = block.shape[0];
                 const [ny, nx] = this.getNextPosition(y, x, direction);
 
-                // 이동 가능한지 체크
                 if (this.canMove(y, x, ny, nx, block.id)) {
                     block.shape[0] = [ny, nx];
+                    moved = true;
+                }
+            }
+
+            // 강철 블록 이동 (형태 유지)
+            const steelBlocks = this.board.blocks.filter(b => b.type === 'steel');
+            for (let block of steelBlocks) {
+                if (this.canMoveBlock(block, direction)) {
+                    // 블록 전체를 이동
+                    for (let i = 0; i < block.shape.length; i++) {
+                        const [y, x] = block.shape[i];
+                        const [ny, nx] = this.getNextPosition(y, x, direction);
+                        block.shape[i] = [ny, nx];
+                    }
                     moved = true;
                 }
             }
@@ -35,6 +46,18 @@ class Gravity {
             this.board.updateGrid();
 
         } while (moved);
+    }
+
+    // 블록 전체가 이동 가능한지 체크 (강철 블록용)
+    canMoveBlock(block, direction) {
+        // 모든 칸이 이동 가능해야 함
+        for (let [y, x] of block.shape) {
+            const [ny, nx] = this.getNextPosition(y, x, direction);
+            if (!this.canMove(y, x, ny, nx, block.id)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     // 일반 블록을 1x1로 분해
