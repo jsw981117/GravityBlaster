@@ -1,7 +1,8 @@
 class InputHandler {
-    constructor(canvas, onSwipe) {
+    constructor(canvas, onSwipe, onPause) {
         this.canvas = canvas;
         this.onSwipe = onSwipe;
+        this.onPause = onPause;
         this.startX = 0;
         this.startY = 0;
         this.minSwipeDistance = 30;
@@ -26,7 +27,7 @@ class InputHandler {
             this.detectSwipe(endX, endY);
         });
 
-        // 마우스 이벤트 (PC 테스트용)
+        // 마우스 이벤트
         this.canvas.addEventListener('mousedown', (e) => {
             this.startX = e.clientX;
             this.startY = e.clientY;
@@ -37,6 +38,38 @@ class InputHandler {
             const endY = e.clientY;
             this.detectSwipe(endX, endY);
         });
+
+        // 키보드 이벤트
+        document.addEventListener('keydown', (e) => {
+            this.handleKeyboard(e);
+        });
+    }
+
+    handleKeyboard(e) {
+        // ESC: 일시정지
+        if (e.key === 'Escape') {
+            if (this.onPause) this.onPause();
+            return;
+        }
+
+        let direction = null;
+
+        // WASD
+        if (e.key === 'w' || e.key === 'W') direction = 'up';
+        else if (e.key === 's' || e.key === 'S') direction = 'down';
+        else if (e.key === 'a' || e.key === 'A') direction = 'left';
+        else if (e.key === 'd' || e.key === 'D') direction = 'right';
+
+        // 방향키
+        else if (e.key === 'ArrowUp') direction = 'up';
+        else if (e.key === 'ArrowDown') direction = 'down';
+        else if (e.key === 'ArrowLeft') direction = 'left';
+        else if (e.key === 'ArrowRight') direction = 'right';
+
+        if (direction) {
+            e.preventDefault();
+            this.onSwipe(direction);
+        }
     }
 
     detectSwipe(endX, endY) {

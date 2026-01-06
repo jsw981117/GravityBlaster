@@ -5,6 +5,7 @@ class UI {
         this.gameOverEl = document.getElementById('game-over');
         this.finalScoreEl = document.getElementById('final-score');
         this.restartBtn = document.getElementById('restart-btn');
+        this.pauseOverlay = document.getElementById('pause-overlay');
     }
 
     updateScore(score) {
@@ -33,5 +34,13 @@ class UI {
 
     hideGameOver() {
         this.gameOverEl.classList.add('hidden');
+    }
+
+    showPause(paused) {
+        if (paused) {
+            this.pauseOverlay.classList.remove('hidden');
+        } else {
+            this.pauseOverlay.classList.add('hidden');
+        }
     }
 }

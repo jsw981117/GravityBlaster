@@ -9,10 +9,12 @@ class Game {
         this.ui = new UI();
         this.inputHandler = new InputHandler(
             document.getElementById('game-canvas'),
-            (dir) => this.onSwipe(dir)
+            (dir) => this.onSwipe(dir),
+            () => this.togglePause()
         );
 
-        this.state = 'waiting'; // waiting | animating | gameover
+        this.state = 'waiting'; // waiting | animating | gameover | paused
+        this.paused = false;
         this.score = 0;
         this.previewBlocks = []; // 다음에 생성될 블록들
         this.currentPreview = []; // 현재 보드에 표시할 예고
@@ -130,7 +132,7 @@ class Game {
 
     // 스와이프 입력 처리
     onSwipe(direction) {
-        if (this.state !== 'waiting') return;
+        if (this.state !== 'waiting' || this.paused) return;
 
         this.state = 'animating';
 
@@ -215,6 +217,14 @@ class Game {
     gameOver() {
         this.state = 'gameover';
         this.ui.showGameOver(this.score, () => this.restart());
+    }
+
+    // 일시정지 토글
+    togglePause() {
+        if (this.state === 'gameover') return;
+
+        this.paused = !this.paused;
+        this.ui.showPause(this.paused);
     }
 
     // 재시작
