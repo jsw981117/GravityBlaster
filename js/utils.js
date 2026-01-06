@@ -12,8 +12,8 @@ const BLOCK_SHAPES = {
 
 // 블록 타입별 색상
 const BLOCK_COLORS = {
-    normal: '#ffffff',
-    steel: '#808080'
+    normal: '#00ffcc',  // 청록색
+    steel: '#888888'    // 은색
 };
 
 // 랜덤 블록 형태 선택

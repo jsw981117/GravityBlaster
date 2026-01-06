@@ -90,19 +90,18 @@ class Renderer {
         }
     }
 
-    // 예고 블록 (반투명)
+    // 예고 블록 (반투명 빨간색)
     drawPreview(previewBlocks) {
-        this.ctx.globalAlpha = 0.3;
+        this.ctx.globalAlpha = 0.4;
 
         for (let preview of previewBlocks) {
-            const { position, type } = preview;
-            const color = BLOCK_COLORS[type];
+            const { position } = preview;
 
             for (let [dy, dx] of preview.shape) {
                 const y = position.y + dy;
                 const x = position.x + dx;
                 if (isInBounds(y, x)) {
-                    this.drawCell(x, y, color);
+                    this.drawCell(x, y, '#ff0000');
                 }
             }
         }
@@ -110,7 +109,7 @@ class Renderer {
         this.ctx.globalAlpha = 1.0;
     }
 
-    // 예고 캔버스 렌더링
+    // 예고 캔버스 렌더링 (빨간색)
     renderPreviewCanvas(previewBlocks) {
         this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
 
@@ -124,7 +123,7 @@ class Renderer {
             const offsetX = i * blockWidth + blockWidth / 2;
             const offsetY = this.previewCanvas.height / 2;
 
-            this.previewCtx.fillStyle = BLOCK_COLORS[preview.type];
+            this.previewCtx.fillStyle = '#ff0000';  // 빨간색
 
             for (let [dy, dx] of preview.shape) {
                 const px = offsetX + dx * cellSize - cellSize;
