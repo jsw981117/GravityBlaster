@@ -154,9 +154,9 @@ class Game {
 
     // 스와이프 입력 처리
     async onSwipe(direction) {
-        // 애니메이션 중이면 큐에 추가
+        // 애니메이션 중이면 마지막 입력만 저장
         if (this.state === 'animating') {
-            this.inputQueue.push(direction);
+            this.inputQueue = [direction];  // 덮어쓰기
             return;
         }
 
@@ -218,45 +218,76 @@ class Game {
 
     // 중력을 애니메이션과 함께 적용
     async applyGravityWithAnimation(direction) {
-        // 일반 블록 분해
-        this.gravity.splitNormalBlocks();
+        // 1. 시작 위치 저장
+        const startPositions = this.saveBlockPositions();
 
-        let moved = true;
-        while (moved) {
-            moved = false;
+        // 2. 최종 위치 즉시 계산
+        this.gravity.apply(direction);
+        const endPositions = this.saveBlockPositions();
 
-            // 한 스텝 이동
-            const normalBlocks = this.board.blocks.filter(b => b.type === 'normal');
-            for (let block of normalBlocks) {
-                const [y, x] = block.shape[0];
-                const [ny, nx] = this.gravity.getNextPosition(y, x, direction);
+        // 3. 0.1초 동안 보간 애니메이션
+        const duration = 100;
+        const startTime = Date.now();
 
-                if (this.gravity.canMove(y, x, ny, nx, block.id)) {
-                    block.shape[0] = [ny, nx];
-                    moved = true;
-                }
-            }
+        while (Date.now() - startTime < duration) {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
 
-            const steelBlocks = this.board.blocks.filter(b => b.type === 'steel');
-            for (let block of steelBlocks) {
-                if (this.gravity.canMoveBlock(block, direction)) {
-                    for (let i = 0; i < block.shape.length; i++) {
-                        const [y, x] = block.shape[i];
-                        const [ny, nx] = this.gravity.getNextPosition(y, x, direction);
-                        block.shape[i] = [ny, nx];
-                    }
-                    moved = true;
-                }
-            }
-
+            this.interpolatePositions(startPositions, endPositions, progress);
             this.board.updateGrid();
             this.render();
 
-            // 이동했으면 애니메이션 딜레이
-            if (moved) {
-                await this.delay(100);
+            if (progress < 1) {
+                await this.nextFrame();
             }
         }
+
+        // 4. 최종 위치 확정
+        this.restoreBlockPositions(endPositions);
+        this.board.updateGrid();
+    }
+
+    // 블록 위치 저장
+    saveBlockPositions() {
+        return this.board.blocks.map(block => ({
+            id: block.id,
+            type: block.type,
+            shape: block.shape.map(([y, x]) => [y, x])
+        }));
+    }
+
+    // 블록 위치 복원
+    restoreBlockPositions(positions) {
+        for (let pos of positions) {
+            const block = this.board.blocks.find(b => b.id === pos.id);
+            if (block) {
+                block.shape = pos.shape.map(([y, x]) => [y, x]);
+            }
+        }
+    }
+
+    // 위치 보간
+    interpolatePositions(startPos, endPos, progress) {
+        for (let i = 0; i < this.board.blocks.length; i++) {
+            const block = this.board.blocks[i];
+            const start = startPos.find(p => p.id === block.id);
+            const end = endPos.find(p => p.id === block.id);
+
+            if (start && end) {
+                block.shape = start.shape.map((startCell, idx) => {
+                    const [sy, sx] = startCell;
+                    const [ey, ex] = end.shape[idx];
+                    const y = sy + (ey - sy) * progress;
+                    const x = sx + (ex - sx) * progress;
+                    return [y, x];
+                });
+            }
+        }
+    }
+
+    // 다음 프레임 대기
+    nextFrame() {
+        return new Promise(resolve => requestAnimationFrame(resolve));
     }
 
     // 딜레이 헬퍼
