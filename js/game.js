@@ -50,14 +50,22 @@ class Game {
     // 블록 생성
     generateBlocks(count) {
         const newBlocks = [];
+        const occupiedCells = new Set(); // 예약된 칸
 
         for (let i = 0; i < count; i++) {
             const type = getRandomType();
             const shape = getRandomShape();
-            const position = this.findPreviewPosition(shape);
+            const position = this.findPreviewPosition(shape, occupiedCells);
 
             if (!position) {
                 return null; // 게임 오버
+            }
+
+            // 선택된 위치를 occupiedCells에 추가
+            for (let [dy, dx] of shape) {
+                const y = position.y + dy;
+                const x = position.x + dx;
+                occupiedCells.add(`${y},${x}`);
             }
 
             newBlocks.push({ type, shape, position });
@@ -67,13 +75,13 @@ class Game {
     }
 
     // 예고 위치 찾기
-    findPreviewPosition(shape) {
+    findPreviewPosition(shape, occupiedCells = new Set()) {
         const candidates = [];
 
         // 보드 전체 스캔
         for (let y = 0; y < 8; y++) {
             for (let x = 0; x < 8; x++) {
-                if (this.board.canPlace(shape, y, x)) {
+                if (this.canPlacePreview(shape, y, x, occupiedCells)) {
                     let score = 100;
 
                     // 기존 블록 인접 시 -30
@@ -99,6 +107,19 @@ class Game {
         // 점수 높은 순 정렬
         candidates.sort((a, b) => b.score - a.score);
         return candidates[0];
+    }
+
+    // 예고 배치 가능 여부 (occupiedCells 포함)
+    canPlacePreview(shape, startY, startX, occupiedCells) {
+        for (let [dy, dx] of shape) {
+            const y = startY + dy;
+            const x = startX + dx;
+
+            if (!isInBounds(y, x)) return false;
+            if (!this.board.isEmpty(y, x)) return false;
+            if (occupiedCells.has(`${y},${x}`)) return false;
+        }
+        return true;
     }
 
     // 가장 빈 공간 찾기
@@ -232,6 +253,15 @@ class Game {
 
     // 예고 블록 실제 생성
     spawnPreview() {
+        // 1. 먼저 모든 예고가 생성 가능한지 체크
+        for (let preview of this.currentPreview) {
+            if (!this.board.canPlace(preview.shape, preview.position.y, preview.position.x)) {
+                this.gameOver();
+                return;
+            }
+        }
+
+        // 2. 모두 가능하면 생성
         for (let preview of this.currentPreview) {
             const block = new Block(
                 preview.type,
