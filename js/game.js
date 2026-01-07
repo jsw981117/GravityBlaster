@@ -285,8 +285,8 @@ class Game {
 
             // 예고 위치에 배치 가능한지 확인
             if (!this.board.canPlace(preview.shape, spawnY, spawnX)) {
-                // 불가능하면 다른 빈 공간 찾기
-                const newPosition = this.findEmptyPosition(preview.shape);
+                // 불가능하면 예고 위치 주변의 빈 공간 찾기
+                const newPosition = this.findEmptyPosition(preview.shape, preview.position.y, preview.position.x);
 
                 if (!newPosition) {
                     // 배치 가능한 공간이 전혀 없음 → 게임 오버
@@ -310,16 +310,25 @@ class Game {
         }
     }
 
-    // 빈 공간 찾기
-    findEmptyPosition(shape) {
+    // 빈 공간 찾기 (예고 위치 주변 우선)
+    findEmptyPosition(shape, previewY, previewX) {
+        const candidates = [];
+
+        // 모든 가능한 위치 수집
         for (let y = 0; y < 8; y++) {
             for (let x = 0; x < 8; x++) {
                 if (this.board.canPlace(shape, y, x)) {
-                    return { y, x };
+                    const distance = Math.abs(y - previewY) + Math.abs(x - previewX);
+                    candidates.push({ y, x, distance });
                 }
             }
         }
-        return null; // 배치 불가
+
+        if (candidates.length === 0) return null;
+
+        // 거리 순 정렬 (가까운 순)
+        candidates.sort((a, b) => a.distance - b.distance);
+        return candidates[0];
     }
 
     // 예고 표시 업데이트
