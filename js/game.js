@@ -29,6 +29,10 @@ class Game {
     startGame() {
         // 메인화면 숨기고 게임 시작
         this.ui.hideMainMenu();
+
+        // canvas가 보이는 상태에서 크기 재계산
+        this.renderer.resize();
+
         this.init();
     }
 
