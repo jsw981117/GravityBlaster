@@ -116,8 +116,6 @@ class UI {
     getDebugConfig() {
         return {
             blockCount: parseInt(document.getElementById('block-count').value),
-            normalRatio: parseFloat(document.getElementById('normal-ratio').value),
-            steelRatio: parseFloat(document.getElementById('steel-ratio').value),
             bombChance: parseInt(document.getElementById('bomb-chance').value),
             bombRange: parseInt(document.getElementById('bomb-range').value)
         };
@@ -125,8 +123,6 @@ class UI {
 
     setDebugConfig(config) {
         document.getElementById('block-count').value = config.blockCount;
-        document.getElementById('normal-ratio').value = config.normalRatio;
-        document.getElementById('steel-ratio').value = config.steelRatio;
         document.getElementById('bomb-chance').value = config.bombChance;
         document.getElementById('bomb-range').value = config.bombRange;
     }

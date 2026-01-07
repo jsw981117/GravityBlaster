@@ -2,25 +2,15 @@
 let blockIdCounter = 0;
 
 class Block {
-    constructor(type, shape, startY, startX, bombChance = 5) {
+    constructor(color, shape, startY, startX, isBomb = false) {
         this.id = ++blockIdCounter;
-        this.type = type; // 'normal' | 'steel'
+        this.color = isBomb ? BOMB_COLOR : color;
+        this.isBomb = isBomb;
         this.shape = []; // [[y, x], [y, x], ...]
-        // 강철 블록은 랜덤 색상, 일반 블록은 기본 색상
-        this.color = type === 'steel'
-            ? STEEL_COLORS[Math.floor(Math.random() * STEEL_COLORS.length)]
-            : BLOCK_COLORS[type];
-        this.isBomb = false;
 
         // shape을 절대 좌표로 변환
         for (let [dy, dx] of shape) {
             this.shape.push([startY + dy, startX + dx]);
-        }
-
-        // 폭탄 블록인 경우 랜덤 칸 하나를 폭탄으로
-        if (isBombBlock(bombChance) && this.shape.length > 0) {
-            const bombIndex = Math.floor(Math.random() * this.shape.length);
-            this.bombCell = this.shape[bombIndex]; // [y, x]
         }
     }
 
@@ -32,12 +22,6 @@ class Block {
     // 블록이 완전히 제거되었는지
     isEmpty() {
         return this.shape.length === 0;
-    }
-
-    // 특정 칸이 폭탄인지
-    isBombCell(y, x) {
-        if (!this.bombCell) return false;
-        return this.bombCell[0] === y && this.bombCell[1] === x;
     }
 
     // 블록이 특정 좌표를 포함하는지

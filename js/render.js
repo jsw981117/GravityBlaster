@@ -1,9 +1,7 @@
 class Renderer {
-    constructor(canvas, previewCanvas) {
+    constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
-        this.previewCanvas = previewCanvas;
-        this.previewCtx = previewCanvas.getContext('2d');
 
         this.cellSize = 0;
         this.resize();
@@ -14,22 +12,14 @@ class Renderer {
         this.canvas.width = size;
         this.canvas.height = size;
         this.cellSize = size / 8;
-
-        this.previewCanvas.width = this.previewCanvas.clientWidth;
-        this.previewCanvas.height = this.previewCanvas.clientHeight;
     }
 
     // 보드 렌더링
-    renderBoard(board, preview = null) {
+    renderBoard(board) {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         // 그리드 라인
         this.drawGrid();
-
-        // 예고 블록 (반투명)
-        if (preview) {
-            this.drawPreview(preview);
-        }
 
         // 블록 렌더링
         for (let y = 0; y < 8; y++) {
@@ -118,50 +108,6 @@ class Renderer {
         for (let cell of cells) {
             // cell: {y: 행, x: 열}이지만 drawCell(x, y)이므로 순서 맞춤
             this.drawCell(cell.x, cell.y, cell.color, cell.isBomb, scale);
-        }
-    }
-
-    // 예고 블록 (반투명 빨간색)
-    drawPreview(previewBlocks) {
-        this.ctx.globalAlpha = 0.4;
-
-        for (let preview of previewBlocks) {
-            const { position } = preview;
-
-            for (let [dy, dx] of preview.shape) {
-                const y = position.y + dy;
-                const x = position.x + dx;
-                if (isInBounds(y, x)) {
-                    this.drawCell(x, y, '#ff0000');
-                }
-            }
-        }
-
-        this.ctx.globalAlpha = 1.0;
-    }
-
-    // 예고 캔버스 렌더링 (빨간색)
-    renderPreviewCanvas(previewBlocks) {
-        this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
-
-        if (!previewBlocks || previewBlocks.length === 0) return;
-
-        const blockWidth = this.previewCanvas.width / previewBlocks.length;
-        const cellSize = Math.min(blockWidth / 3, 20);
-
-        for (let i = 0; i < previewBlocks.length; i++) {
-            const preview = previewBlocks[i];
-            const offsetX = i * blockWidth + blockWidth / 2;
-            const offsetY = this.previewCanvas.height / 2;
-
-            this.previewCtx.fillStyle = '#ff0000';  // 빨간색
-
-            for (let [dy, dx] of preview.shape) {
-                const px = offsetX + dx * cellSize - cellSize;
-                const py = offsetY + dy * cellSize - cellSize;
-
-                this.previewCtx.fillRect(px, py, cellSize - 2, cellSize - 2);
-            }
         }
     }
 }

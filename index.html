@@ -23,18 +23,18 @@
 
             <div class="tutorial-section">
                 <h3>블록 설명</h3>
-                <p><span class="color-normal">■ 일반 블록 (청록색)</span>: 중력 적용 시 1x1로 분해되어 개별 이동</p>
-                <p><span class="color-steel">■ 강철 블록 (은색)</span>: 형태 유지한 채 중력 적용</p>
-                <p><span class="color-bomb">● 폭탄 (빨간 점)</span>: 5% 확률 생성, 라인 완성 시 주변 8칸 폭발</p>
+                <p><span class="color-blue">■ 파랑</span> <span class="color-red">■ 빨강</span> <span class="color-yellow">■ 노랑</span> <span class="color-green">■ 초록</span>: 4가지 색상 블록</p>
+                <p><span class="color-bomb">💣 폭탄</span>: 인접한 매치 발생 시 주변 폭발</p>
             </div>
 
             <div class="tutorial-section">
                 <h3>게임 방식</h3>
-                <p>• 8x8 그리드에서 블록이 생성됩니다</p>
+                <p>• 8x8 그리드에서 블록이 즉시 생성됩니다</p>
                 <p>• <strong>스와이프 또는 WASD/방향키</strong>로 중력 방향 변경</p>
-                <p>• 가로줄 또는 세로줄이 가득 차면 라인 제거</p>
-                <p>• 연쇄로 제거하면 추가 점수 획득</p>
-                <p>• 다음 블록(<span class="color-preview">빨간 예고</span>) 배치 불가 시 게임 오버!</p>
+                <p>• 같은 색 블록 3개 이상 인접(상하좌우)하면 제거</p>
+                <p>• 4개부터 보너스 점수, 연쇄로 추가 점수</p>
+                <p>• 중력 적용 시 블록이 분해되어 개별 이동</p>
+                <p>• 블록 생성 불가 시 게임 오버!</p>
             </div>
 
             <button id="tutorial-start-btn" class="menu-btn">게임 시작</button>
@@ -51,11 +51,6 @@
         </div>
 
         <canvas id="game-canvas"></canvas>
-
-        <div id="ui-bottom">
-            <div id="next-label">Next:</div>
-            <canvas id="preview-canvas"></canvas>
-        </div>
     </div>
 
     <div id="game-over" class="hidden">
@@ -86,16 +81,6 @@
             <div class="debug-item">
                 <label>블록 생성 개수:</label>
                 <input type="number" id="block-count" value="1" min="1" max="4">
-            </div>
-
-            <div class="debug-item">
-                <label>일반 블록 비율:</label>
-                <input type="number" id="normal-ratio" value="0.0" min="0" max="1" step="0.1">
-            </div>
-
-            <div class="debug-item">
-                <label>강철 블록 비율:</label>
-                <input type="number" id="steel-ratio" value="1.0" min="0" max="1" step="0.1">
             </div>
 
             <div class="debug-item">

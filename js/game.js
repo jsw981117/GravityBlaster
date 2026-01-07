@@ -2,10 +2,7 @@ class Game {
     constructor() {
         this.board = new Board();
         this.gravity = new Gravity(this.board);
-        this.renderer = new Renderer(
-            document.getElementById('game-canvas'),
-            document.getElementById('preview-canvas')
-        );
+        this.renderer = new Renderer(document.getElementById('game-canvas'));
         this.ui = new UI();
         this.inputHandler = new InputHandler(
             document.getElementById('game-canvas'),
@@ -16,14 +13,10 @@ class Game {
         this.state = 'waiting'; // waiting | animating | gameover | paused
         this.paused = false;
         this.score = 0;
-        this.previewBlocks = []; // 다음에 생성될 블록들
-        this.currentPreview = []; // 현재 보드에 표시할 예고
 
         // 디버그 설정
         this.config = {
             blockCount: 1,
-            normalRatio: 0.0,
-            steelRatio: 1.0,
             bombChance: 5,
             bombRange: 2
         };
@@ -41,13 +34,6 @@ class Game {
 
     applyDebugConfig() {
         const newConfig = this.ui.getDebugConfig();
-
-        // 비율 합 검증
-        if (Math.abs(newConfig.normalRatio + newConfig.steelRatio - 1.0) > 0.01) {
-            alert('일반 블록과 강철 블록 비율의 합이 1이어야 합니다.');
-            return;
-        }
-
         Object.assign(this.config, newConfig);
         this.ui.hideDebug();
         alert('설정이 적용되었습니다.');
@@ -71,24 +57,8 @@ class Game {
         this.paused = false;
         this.ui.updateScore(0);
 
-        // 첫 블록 생성 (config.blockCount 개수)
-        const firstBlocks = this.generateBlocks();
-        for (let preview of firstBlocks) {
-            const block = new Block(
-                preview.type,
-                preview.shape,
-                preview.position.y,
-                preview.position.x,
-                this.config.bombChance
-            );
-            this.board.addBlock(block);
-        }
-
-        // 다음 예고 생성
-        this.previewBlocks = this.generateBlocks();
-        this.updatePreviewDisplay();
-
-        if (!this.previewBlocks) {
+        // 첫 블록 즉시 생성
+        if (!this.spawnBlocks()) {
             this.gameOver();
             return;
         }
@@ -96,109 +66,72 @@ class Game {
         this.render();
     }
 
-    // 블록 생성
-    generateBlocks() {
+    // 블록 즉시 생성
+    spawnBlocks() {
         const count = this.config.blockCount;
-        const newBlocks = [];
-        const occupiedCells = new Set(); // 예약된 칸
 
         for (let i = 0; i < count; i++) {
-            const type = getRandomType(this.config.normalRatio, this.config.steelRatio);
+            // 폭탄 확률 체크
+            const isBomb = isBombBlock(this.config.bombChance);
+            const color = isBomb ? null : getRandomColor();
             const shape = getRandomShape();
-            const position = this.findPreviewPosition(shape, occupiedCells);
+
+            // 최적 생성 위치 찾기
+            const position = this.findBestSpawnPosition(shape);
 
             if (!position) {
-                return null; // 게임 오버
+                return false; // 게임 오버
             }
 
-            // 선택된 위치를 occupiedCells에 추가
-            for (let [dy, dx] of shape) {
-                const y = position.y + dy;
-                const x = position.x + dx;
-                occupiedCells.add(`${y},${x}`);
-            }
-
-            newBlocks.push({ type, shape, position });
+            // 블록 생성
+            const block = new Block(color, shape, position.y, position.x, isBomb);
+            this.board.addBlock(block);
         }
 
-        return newBlocks;
+        return true;
     }
 
-    // 예고 위치 찾기
-    findPreviewPosition(shape, occupiedCells = new Set()) {
+    // 최적 생성 위치 찾기 (빈 공간 중앙 선호, 기존 블록+보드 끝에서 멀게)
+    findBestSpawnPosition(shape) {
         const candidates = [];
 
         // 보드 전체 스캔
         for (let y = 0; y < 8; y++) {
             for (let x = 0; x < 8; x++) {
-                if (this.canPlacePreview(shape, y, x, occupiedCells)) {
-                    let score = 100;
+                if (!this.board.canPlace(shape, y, x)) continue;
 
-                    // 기존 블록 인접 시 -30
-                    if (this.board.hasAdjacentBlock(shape, y, x)) {
-                        score -= 30;
+                let score = 0;
+
+                // 보드 중앙에 가까울수록 높은 점수
+                const centerDist = Math.abs(y - 3.5) + Math.abs(x - 3.5);
+                score += (7 - centerDist) * 10;
+
+                // 기존 블록과 거리 계산 (멀수록 높은 점수)
+                let minBlockDist = 99;
+                for (let by = 0; by < 8; by++) {
+                    for (let bx = 0; bx < 8; bx++) {
+                        if (!this.board.isEmpty(by, bx)) {
+                            const dist = Math.abs(by - y) + Math.abs(bx - x);
+                            minBlockDist = Math.min(minBlockDist, dist);
+                        }
                     }
-
-                    // 가장자리 시 -20
-                    if (this.board.isEdge(shape, y, x)) {
-                        score -= 20;
-                    }
-
-                    candidates.push({ y, x, score });
                 }
+                score += minBlockDist * 5;
+
+                // 가장자리 페널티
+                if (this.board.isEdge(shape, y, x)) {
+                    score -= 20;
+                }
+
+                candidates.push({ y, x, score });
             }
         }
 
-        if (candidates.length === 0) {
-            // 가장 빈 공간 찾기
-            return this.findMostEmptyArea(shape);
-        }
+        if (candidates.length === 0) return null;
 
         // 점수 높은 순 정렬
         candidates.sort((a, b) => b.score - a.score);
         return candidates[0];
-    }
-
-    // 예고 배치 가능 여부 (occupiedCells 포함)
-    canPlacePreview(shape, startY, startX, occupiedCells) {
-        for (let [dy, dx] of shape) {
-            const y = startY + dy;
-            const x = startX + dx;
-
-            if (!isInBounds(y, x)) return false;
-            if (!this.board.isEmpty(y, x)) return false;
-            if (occupiedCells.has(`${y},${x}`)) return false;
-        }
-        return true;
-    }
-
-    // 가장 빈 공간 찾기
-    findMostEmptyArea(shape) {
-        let maxEmpty = -1;
-        let bestPos = null;
-
-        for (let y = 0; y < 8; y++) {
-            for (let x = 0; x < 8; x++) {
-                // 3x3 영역의 빈 칸 수 계산
-                let emptyCount = 0;
-                for (let dy = -1; dy <= 1; dy++) {
-                    for (let dx = -1; dx <= 1; dx++) {
-                        const ny = y + dy;
-                        const nx = x + dx;
-                        if (isInBounds(ny, nx) && this.board.isEmpty(ny, nx)) {
-                            emptyCount++;
-                        }
-                    }
-                }
-
-                if (emptyCount > maxEmpty) {
-                    maxEmpty = emptyCount;
-                    bestPos = { y, x };
-                }
-            }
-        }
-
-        return bestPos;
     }
 
     // 스와이프 입력 처리
@@ -209,19 +142,14 @@ class Game {
 
         try {
             // 턴 처리
-            const chain = this.processTurn(direction);
+            const matchInfo = this.processTurn(direction);
 
             // 점수 계산
-            this.addScore(chain);
+            this.addScore(matchInfo);
 
-            // 다음 턴 준비
-            this.spawnPreview();
-            this.previewBlocks = this.generateBlocks();
-
-            if (!this.previewBlocks) {
+            // 다음 블록 생성
+            if (!this.spawnBlocks()) {
                 this.gameOver();
-            } else {
-                this.updatePreviewDisplay();
             }
 
             this.render();
@@ -237,25 +165,31 @@ class Game {
 
     // 턴 처리 (중력 + 연쇄)
     processTurn(direction) {
+        let totalMatches = [];
         let chain = 0;
 
         while (true) {
             // 중력 적용
             this.applyGravity(direction);
 
-            // 라인 판정
-            const lines = this.board.findCompletedLines();
-            if (lines.length === 0) break;
+            // 매치 판정
+            const matches = this.board.findMatches();
+            if (matches.length === 0) break;
 
-            // 라인 제거
-            this.board.removeLines(lines, this.config.bombRange);
+            // 매치 정보 저장
+            for (let match of matches) {
+                totalMatches.push({ ...match, chain });
+            }
+
+            // 매치 제거
+            this.board.removeMatches(matches, this.config.bombRange);
             chain++;
         }
 
         // UI 업데이트
         this.ui.updateGravityIndicator(direction);
 
-        return chain;
+        return totalMatches;
     }
 
     // 중력 적용
@@ -277,79 +211,34 @@ class Game {
         this.render();
     }
 
-    // 예고 블록 실제 생성
-    spawnPreview() {
-        for (let preview of this.currentPreview) {
-            let spawnY = preview.position.y;
-            let spawnX = preview.position.x;
+    // 점수 추가 (매치 기반)
+    addScore(matches) {
+        if (matches.length === 0) return;
 
-            // 예고 위치에 배치 가능한지 확인
-            if (!this.board.canPlace(preview.shape, spawnY, spawnX)) {
-                // 불가능하면 예고 위치 주변의 빈 공간 찾기
-                const newPosition = this.findEmptyPosition(preview.shape, preview.position.y, preview.position.x);
+        let totalScore = 0;
 
-                if (!newPosition) {
-                    // 배치 가능한 공간이 전혀 없음 → 게임 오버
-                    this.gameOver();
-                    return;
-                }
-
-                spawnY = newPosition.y;
-                spawnX = newPosition.x;
+        for (let match of matches) {
+            const count = match.cells.length;
+            // 3개 = 기본 점수
+            let score = 100;
+            // 4개부터 개당 보너스
+            if (count >= 4) {
+                score += (count - 3) * 50;
             }
-
-            // 찾은 위치에 생성
-            const block = new Block(
-                preview.type,
-                preview.shape,
-                spawnY,
-                spawnX,
-                this.config.bombChance
-            );
-            this.board.addBlock(block);
-        }
-    }
-
-    // 빈 공간 찾기 (예고 위치 주변 우선)
-    findEmptyPosition(shape, previewY, previewX) {
-        const candidates = [];
-
-        // 모든 가능한 위치 수집
-        for (let y = 0; y < 8; y++) {
-            for (let x = 0; x < 8; x++) {
-                if (this.board.canPlace(shape, y, x)) {
-                    const distance = Math.abs(y - previewY) + Math.abs(x - previewX);
-                    candidates.push({ y, x, distance });
-                }
+            // 연쇄 보너스
+            if (match.chain > 0) {
+                score += match.chain * 100;
             }
+            totalScore += score;
         }
 
-        if (candidates.length === 0) return null;
-
-        // 거리 순 정렬 (가까운 순)
-        candidates.sort((a, b) => a.distance - b.distance);
-        return candidates[0];
-    }
-
-    // 예고 표시 업데이트
-    updatePreviewDisplay() {
-        this.currentPreview = this.previewBlocks;
-        this.renderer.renderPreviewCanvas(this.previewBlocks);
-    }
-
-    // 점수 추가
-    addScore(chain) {
-        if (chain > 0) {
-            const baseScore = 100;
-            const chainBonus = chain > 1 ? (chain - 1) * 200 : 0;
-            this.score += baseScore + chainBonus;
-            this.ui.updateScore(this.score);
-        }
+        this.score += totalScore;
+        this.ui.updateScore(this.score);
     }
 
     // 렌더링
     render() {
-        this.renderer.renderBoard(this.board, this.currentPreview);
+        this.renderer.renderBoard(this.board);
     }
 
     // 게임 오버

@@ -21,9 +21,8 @@ class Board {
                 if (isInBounds(y, x)) {
                     this.grid[y][x] = {
                         blockId: block.id,
-                        type: block.type,
                         color: block.color,
-                        isBomb: block.isBombCell(y, x)
+                        isBomb: block.isBomb
                     };
                 }
             }
@@ -91,58 +90,85 @@ class Board {
         return false;
     }
 
-    // 완성된 라인 찾기 (행/열)
-    findCompletedLines() {
-        const lines = [];
+    // 매치-3 찾기 (같은 색 3개 이상 인접)
+    findMatches() {
+        const visited = Array(8).fill(null).map(() => Array(8).fill(false));
+        const matches = [];
 
-        // 행 검사
         for (let y = 0; y < 8; y++) {
-            if (this.grid[y].every(cell => cell !== null)) {
-                lines.push({ type: 'row', index: y });
+            for (let x = 0; x < 8; x++) {
+                if (visited[y][x] || !this.grid[y][x] || this.grid[y][x].isBomb) continue;
+
+                const color = this.grid[y][x].color;
+                const group = [];
+                const queue = [[y, x]];
+                visited[y][x] = true;
+
+                // BFS로 같은 색 연결된 셀 찾기
+                while (queue.length > 0) {
+                    const [cy, cx] = queue.shift();
+                    group.push([cy, cx]);
+
+                    // 상하좌우 체크
+                    const neighbors = [
+                        [cy - 1, cx], [cy + 1, cx],
+                        [cy, cx - 1], [cy, cx + 1]
+                    ];
+
+                    for (let [ny, nx] of neighbors) {
+                        if (!isInBounds(ny, nx) || visited[ny][nx]) continue;
+                        if (!this.grid[ny][nx] || this.grid[ny][nx].isBomb) continue;
+                        if (this.grid[ny][nx].color !== color) continue;
+
+                        visited[ny][nx] = true;
+                        queue.push([ny, nx]);
+                    }
+                }
+
+                // 3개 이상이면 매치
+                if (group.length >= 3) {
+                    matches.push({ color, cells: group });
+                }
             }
         }
 
-        // 열 검사
-        for (let x = 0; x < 8; x++) {
-            const column = this.grid.map(row => row[x]);
-            if (column.every(cell => cell !== null)) {
-                lines.push({ type: 'col', index: x });
-            }
-        }
-
-        return lines;
+        return matches;
     }
 
     // 제거될 셀 정보 가져오기 (애니메이션용)
-    getLineCells(lines) {
+    getMatchCells(matches, bombRange = 2) {
         const toRemove = new Set();
-        const bombsToExplode = [];
         const cellData = [];
+        const matchCells = new Set();
 
-        // 제거할 칸 수집
-        for (let line of lines) {
-            if (line.type === 'row') {
-                for (let x = 0; x < 8; x++) {
-                    toRemove.add(`${line.index},${x}`);
-                    if (this.grid[line.index][x]?.isBomb) {
-                        bombsToExplode.push([line.index, x]);
-                    }
-                }
-            } else {
-                for (let y = 0; y < 8; y++) {
-                    toRemove.add(`${y},${line.index}`);
-                    if (this.grid[y][line.index]?.isBomb) {
-                        bombsToExplode.push([y, line.index]);
-                    }
-                }
+        // 매치된 칸 수집
+        for (let match of matches) {
+            for (let [y, x] of match.cells) {
+                toRemove.add(`${y},${x}`);
+                matchCells.add(`${y},${x}`);
             }
         }
 
-        // 폭탄 폭발 처리 (주변 8칸)
-        for (let [by, bx] of bombsToExplode) {
-            const neighbors = getNeighbors8(by, bx);
-            for (let [ny, nx] of neighbors) {
-                toRemove.add(`${ny},${nx}`);
+        // 폭탄 폭발 체크 (매치 인접 폭탄)
+        for (let match of matches) {
+            for (let [y, x] of match.cells) {
+                // 상하좌우 인접 셀 체크
+                const neighbors = [
+                    [y - 1, x], [y + 1, x],
+                    [y, x - 1], [y, x + 1]
+                ];
+
+                for (let [ny, nx] of neighbors) {
+                    if (!isInBounds(ny, nx) || !this.grid[ny][nx]) continue;
+                    if (this.grid[ny][nx].isBomb) {
+                        // 폭탄 주변 8칸 제거
+                        const explosionCells = getNeighborsInRange(ny, nx, bombRange);
+                        for (let [ey, ex] of explosionCells) {
+                            toRemove.add(`${ey},${ex}`);
+                        }
+                        toRemove.add(`${ny},${nx}`); // 폭탄 자체도 제거
+                    }
+                }
             }
         }
 
@@ -161,35 +187,37 @@ class Board {
         return cellData;
     }
 
-    // 라인 제거
-    removeLines(lines, bombRange = 1) {
-        const toRemove = new Set(); // [y, x] 문자열 형태로 저장
-        const bombsToExplode = [];
+    // 매치 제거
+    removeMatches(matches, bombRange = 2) {
+        const toRemove = new Set();
 
-        // 제거할 칸 수집
-        for (let line of lines) {
-            if (line.type === 'row') {
-                for (let x = 0; x < 8; x++) {
-                    toRemove.add(`${line.index},${x}`);
-                    if (this.grid[line.index][x]?.isBomb) {
-                        bombsToExplode.push([line.index, x]);
-                    }
-                }
-            } else {
-                for (let y = 0; y < 8; y++) {
-                    toRemove.add(`${y},${line.index}`);
-                    if (this.grid[y][line.index]?.isBomb) {
-                        bombsToExplode.push([y, line.index]);
-                    }
-                }
+        // 매치된 칸 수집
+        for (let match of matches) {
+            for (let [y, x] of match.cells) {
+                toRemove.add(`${y},${x}`);
             }
         }
 
-        // 폭탄 폭발 처리 (범위 설정 기반)
-        for (let [by, bx] of bombsToExplode) {
-            const neighbors = getNeighborsInRange(by, bx, bombRange);
-            for (let [ny, nx] of neighbors) {
-                toRemove.add(`${ny},${nx}`);
+        // 폭탄 폭발 체크 (매치 인접 폭탄)
+        for (let match of matches) {
+            for (let [y, x] of match.cells) {
+                // 상하좌우 인접 셀 체크
+                const neighbors = [
+                    [y - 1, x], [y + 1, x],
+                    [y, x - 1], [y, x + 1]
+                ];
+
+                for (let [ny, nx] of neighbors) {
+                    if (!isInBounds(ny, nx) || !this.grid[ny][nx]) continue;
+                    if (this.grid[ny][nx].isBomb) {
+                        // 폭탄 주변 제거
+                        const explosionCells = getNeighborsInRange(ny, nx, bombRange);
+                        for (let [ey, ex] of explosionCells) {
+                            toRemove.add(`${ey},${ex}`);
+                        }
+                        toRemove.add(`${ny},${nx}`); // 폭탄 자체도 제거
+                    }
+                }
             }
         }
 
@@ -208,7 +236,7 @@ class Board {
         // 그리드 업데이트
         this.updateGrid();
 
-        return toRemove.size > 0;
+        return { removed: toRemove.size > 0, count: toRemove.size };
     }
 
     // 보드 비우기

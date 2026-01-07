@@ -10,20 +10,16 @@ const BLOCK_SHAPES = {
     '3x1': [[0, 0], [1, 0], [2, 0]]
 };
 
-// 블록 타입별 색상
-const BLOCK_COLORS = {
-    normal: '#00ffcc'  // 청록색
+// 게임 색상 (4가지)
+const GAME_COLORS = {
+    blue: '#4A90E2',
+    red: '#E74C3C',
+    yellow: '#F1C40F',
+    green: '#2ECC71'
 };
 
-// 강철 블록 색상 팔레트
-const STEEL_COLORS = [
-    '#4A90E2',  // 파랑
-    '#9B59B6',  // 보라
-    '#1ABC9C',  // 청록
-    '#3498DB',  // 밝은 파랑
-    '#8E44AD',  // 진보라
-    '#16A085'   // 진청록
-];
+// 폭탄 색상
+const BOMB_COLOR = '#555555';
 
 // 랜덤 블록 형태 선택
 function getRandomShape() {
@@ -32,11 +28,10 @@ function getRandomShape() {
     return BLOCK_SHAPES[key];
 }
 
-// 랜덤 블록 타입 (설정 기반)
-function getRandomType(normalRatio, steelRatio) {
-    const rand = Math.random();
-    if (rand < normalRatio) return 'normal';
-    return 'steel';
+// 랜덤 색상 선택
+function getRandomColor() {
+    const colors = Object.values(GAME_COLORS);
+    return colors[Math.floor(Math.random() * colors.length)];
 }
 
 // 폭탄 여부 (설정 기반)
