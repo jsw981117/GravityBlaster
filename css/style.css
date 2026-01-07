@@ -146,6 +146,119 @@ body {
     color: #ccc;
 }
 
+/* 메인화면 */
+#main-menu {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    width: 90%;
+    max-width: 400px;
+}
+
+#main-menu h1 {
+    font-size: 48px;
+    margin-bottom: 60px;
+    letter-spacing: 2px;
+}
+
+.menu-btn {
+    width: 100%;
+    padding: 16px;
+    margin-bottom: 20px;
+    font-size: 20px;
+    background: #fff;
+    color: #1a1a2e;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: transform 0.1s, background 0.2s;
+}
+
+.menu-btn:hover {
+    background: #ddd;
+}
+
+.menu-btn:active {
+    transform: scale(0.95);
+}
+
+/* 튜토리얼 팝업 */
+#tutorial-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+#tutorial-content {
+    background: #1a1a2e;
+    border: 2px solid #fff;
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+#tutorial-content h2 {
+    font-size: 32px;
+    text-align: center;
+    margin-bottom: 30px;
+    letter-spacing: 1px;
+}
+
+#tutorial-content h3 {
+    font-size: 20px;
+    margin-bottom: 15px;
+    color: #fff;
+}
+
+.tutorial-section {
+    margin-bottom: 30px;
+}
+
+.tutorial-section p {
+    font-size: 16px;
+    line-height: 1.8;
+    margin-bottom: 10px;
+    color: #ccc;
+}
+
+#tutorial-start-btn {
+    margin-top: 10px;
+}
+
+/* 색상 강조 */
+.color-normal {
+    color: #00ffcc;
+    font-weight: bold;
+}
+
+.color-steel {
+    color: #888888;
+    font-weight: bold;
+}
+
+.color-bomb {
+    color: #ff0000;
+    font-weight: bold;
+}
+
+.color-preview {
+    color: #ff0000;
+    font-weight: bold;
+}
+
 .hidden {
     display: none !important;
 }

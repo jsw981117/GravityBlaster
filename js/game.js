@@ -18,12 +18,28 @@ class Game {
         this.score = 0;
         this.previewBlocks = []; // 다음에 생성될 블록들
         this.currentPreview = []; // 현재 보드에 표시할 예고
-        this.inputQueue = []; // 입력 큐
 
+        // UI 이벤트 연결
+        this.ui.onStartGame = () => this.startGame();
+
+        // 메인화면 표시
+        this.ui.showMainMenu();
+    }
+
+    startGame() {
+        // 메인화면 숨기고 게임 시작
+        this.ui.hideMainMenu();
         this.init();
     }
 
     init() {
+        // 보드 초기화
+        this.board.clear();
+        this.score = 0;
+        this.state = 'waiting';
+        this.paused = false;
+        this.ui.updateScore(0);
+
         // 첫 블록 2개 생성
         const firstBlocks = this.generateBlocks(2);
         for (let preview of firstBlocks) {
@@ -287,11 +303,7 @@ class Game {
 
     // 재시작
     restart() {
-        this.board.clear();
-        this.score = 0;
-        this.state = 'waiting';
         this.ui.hideGameOver();
-        this.ui.updateScore(0);
         this.init();
     }
 }
