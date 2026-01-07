@@ -4,12 +4,9 @@ class Gravity {
         this.direction = null; // 'up' | 'down' | 'left' | 'right'
     }
 
-    // 중력 적용
+    // 중력 적용 (splitNormalBlocks는 호출자가 먼저 실행해야 함)
     apply(direction) {
         this.direction = direction;
-
-        // 일반 블록을 1x1 블록으로 분해
-        this.splitNormalBlocks();
 
         let moved = false;
 
