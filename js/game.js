@@ -154,19 +154,27 @@ class Game {
 
     // 스와이프 입력 처리
     async onSwipe(direction) {
+        console.log('[onSwipe] direction:', direction, 'state:', this.state, 'paused:', this.paused);
+
         // 애니메이션 중이면 마지막 입력만 저장
         if (this.state === 'animating') {
             this.inputQueue = [direction];  // 덮어쓰기
+            console.log('[onSwipe] queued input');
             return;
         }
 
-        if (this.state !== 'waiting' || this.paused) return;
+        if (this.state !== 'waiting' || this.paused) {
+            console.log('[onSwipe] blocked - state:', this.state, 'paused:', this.paused);
+            return;
+        }
 
         this.state = 'animating';
+        console.log('[onSwipe] start processing');
 
         try {
             // 턴 처리 (애니메이션 포함)
             const chain = await this.processTurn(direction);
+            console.log('[onSwipe] processTurn done, chain:', chain);
 
             // 점수 계산
             this.addScore(chain);
@@ -182,17 +190,20 @@ class Game {
             }
 
             this.render();
+            console.log('[onSwipe] render done');
         } catch (error) {
-            console.error('Animation error:', error);
+            console.error('[onSwipe] Animation error:', error);
         } finally {
             // 에러 발생 여부와 관계없이 state 복구
             if (this.state !== 'gameover') {
                 this.state = 'waiting';
+                console.log('[onSwipe] state restored to waiting');
             }
 
             // 큐에 대기 중인 입력 처리
             if (this.inputQueue.length > 0) {
                 const nextDirection = this.inputQueue.shift();
+                console.log('[onSwipe] processing queued input:', nextDirection);
                 this.onSwipe(nextDirection);
             }
         }
@@ -295,10 +306,12 @@ class Game {
 
     // 라인 제거 애니메이션
     async removeLinesWithAnimation(lines) {
+        console.log('[removeLines] lines:', lines.length);
         if (lines.length === 0) return;
 
         // 제거될 셀 정보 가져오기
         const cellsToRemove = this.board.getLineCells(lines);
+        console.log('[removeLines] cells to remove:', cellsToRemove.length, cellsToRemove);
 
         // 0.2초 동안 축소 애니메이션
         const duration = 200;
@@ -318,8 +331,10 @@ class Game {
             }
         }
 
+        console.log('[removeLines] animation done, removing');
         // 실제 제거
         this.board.removeLines(lines);
+        console.log('[removeLines] removed');
     }
 
     // 다음 프레임 대기
