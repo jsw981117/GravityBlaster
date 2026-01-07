@@ -36,7 +36,7 @@ class Renderer {
             for (let x = 0; x < 8; x++) {
                 const cell = board.grid[y][x];
                 if (cell) {
-                    this.drawCell(x, y, cell.color, cell.isBomb);
+                    this.drawCell(x, y, cell.color, cell.isBomb, 1.0, board, cell.blockId);
                 }
             }
         }
@@ -62,35 +62,54 @@ class Renderer {
     }
 
     // 셀 그리기
-    drawCell(x, y, color, isBomb = false, scale = 1.0) {
+    drawCell(x, y, color, isBomb = false, scale = 1.0, board = null, blockId = null) {
         const px = x * this.cellSize;
         const py = y * this.cellSize;
         const padding = 2;
 
+        // 인접 셀이 같은 블록인지 확인
+        let extendTop = false, extendBottom = false, extendLeft = false, extendRight = false;
+
+        if (board && blockId) {
+            const topCell = y > 0 ? board.grid[y - 1][x] : null;
+            const bottomCell = y < 7 ? board.grid[y + 1][x] : null;
+            const leftCell = x > 0 ? board.grid[y][x - 1] : null;
+            const rightCell = x < 7 ? board.grid[y][x + 1] : null;
+
+            extendTop = topCell && topCell.blockId === blockId;
+            extendBottom = bottomCell && bottomCell.blockId === blockId;
+            extendLeft = leftCell && leftCell.blockId === blockId;
+            extendRight = rightCell && rightCell.blockId === blockId;
+        }
+
+        // 경계선 확장 계산
+        const topPadding = extendTop ? 0 : padding;
+        const bottomPadding = extendBottom ? 0 : padding;
+        const leftPadding = extendLeft ? 0 : padding;
+        const rightPadding = extendRight ? 0 : padding;
+
+        const rectX = px + leftPadding;
+        const rectY = py + topPadding;
+        const rectWidth = this.cellSize - leftPadding - rightPadding;
+        const rectHeight = this.cellSize - topPadding - bottomPadding;
+
+        // 스케일 적용 (애니메이션용, 중앙 기준)
         const centerX = px + this.cellSize / 2;
         const centerY = py + this.cellSize / 2;
-        const size = (this.cellSize - padding * 2) * scale;
+        const scaledWidth = rectWidth * scale;
+        const scaledHeight = rectHeight * scale;
+        const scaledX = centerX - scaledWidth / 2;
+        const scaledY = centerY - scaledHeight / 2;
 
         this.ctx.fillStyle = color;
-        this.ctx.fillRect(
-            centerX - size / 2,
-            centerY - size / 2,
-            size,
-            size
-        );
+        this.ctx.fillRect(scaledX, scaledY, scaledWidth, scaledHeight);
 
-        // 폭탄 표시
+        // 폭탄 표시 (💣 이모지)
         if (isBomb) {
-            this.ctx.fillStyle = '#ff0000';
-            this.ctx.beginPath();
-            this.ctx.arc(
-                centerX,
-                centerY,
-                (this.cellSize / 6) * scale,
-                0,
-                Math.PI * 2
-            );
-            this.ctx.fill();
+            this.ctx.font = `${this.cellSize * 0.5 * scale}px Arial`;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText('💣', centerX, centerY);
         }
     }
 

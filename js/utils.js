@@ -12,9 +12,18 @@ const BLOCK_SHAPES = {
 
 // 블록 타입별 색상
 const BLOCK_COLORS = {
-    normal: '#00ffcc',  // 청록색
-    steel: '#888888'    // 은색
+    normal: '#00ffcc'  // 청록색
 };
+
+// 강철 블록 색상 팔레트
+const STEEL_COLORS = [
+    '#4A90E2',  // 파랑
+    '#9B59B6',  // 보라
+    '#1ABC9C',  // 청록
+    '#3498DB',  // 밝은 파랑
+    '#8E44AD',  // 진보라
+    '#16A085'   // 진청록
+];
 
 // 랜덤 블록 형태 선택
 function getRandomShape() {

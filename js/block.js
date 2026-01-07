@@ -6,7 +6,10 @@ class Block {
         this.id = ++blockIdCounter;
         this.type = type; // 'normal' | 'steel'
         this.shape = []; // [[y, x], [y, x], ...]
-        this.color = BLOCK_COLORS[type];
+        // 강철 블록은 랜덤 색상, 일반 블록은 기본 색상
+        this.color = type === 'steel'
+            ? STEEL_COLORS[Math.floor(Math.random() * STEEL_COLORS.length)]
+            : BLOCK_COLORS[type];
         this.isBomb = false;
 
         // shape을 절대 좌표로 변환
