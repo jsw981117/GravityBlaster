@@ -153,20 +153,14 @@ class Game {
     }
 
     // 스와이프 입력 처리
-    async onSwipe(direction) {
-        // 애니메이션 중이면 마지막 입력만 저장
-        if (this.state === 'animating') {
-            this.inputQueue = [direction];  // 덮어쓰기
-            return;
-        }
-
+    onSwipe(direction) {
         if (this.state !== 'waiting' || this.paused) return;
 
         this.state = 'animating';
 
         try {
-            // 턴 처리 (애니메이션 포함)
-            const chain = await this.processTurn(direction);
+            // 턴 처리
+            const chain = this.processTurn(direction);
 
             // 점수 계산
             this.addScore(chain);
@@ -183,35 +177,29 @@ class Game {
 
             this.render();
         } catch (error) {
-            console.error('Animation error:', error);
+            console.error('Error:', error);
         } finally {
-            // 에러 발생 여부와 관계없이 state 복구
+            // state 복구
             if (this.state !== 'gameover') {
                 this.state = 'waiting';
-            }
-
-            // 큐에 대기 중인 입력 처리
-            if (this.inputQueue.length > 0) {
-                const nextDirection = this.inputQueue.shift();
-                this.onSwipe(nextDirection);
             }
         }
     }
 
-    // 턴 처리 (중력 + 연쇄) - 애니메이션 포함
-    async processTurn(direction) {
+    // 턴 처리 (중력 + 연쇄)
+    processTurn(direction) {
         let chain = 0;
 
         while (true) {
             // 중력 적용
-            await this.applyGravityWithAnimation(direction);
+            this.applyGravity(direction);
 
             // 라인 판정
             const lines = this.board.findCompletedLines();
             if (lines.length === 0) break;
 
-            // 라인 제거 애니메이션
-            await this.removeLinesWithAnimation(lines);
+            // 라인 제거
+            this.board.removeLines(lines);
             chain++;
         }
 
@@ -221,121 +209,23 @@ class Game {
         return chain;
     }
 
-    // 중력을 애니메이션과 함께 적용
-    async applyGravityWithAnimation(direction) {
-        // 0. 이전 애니메이션 실수 좌표 정리
+    // 중력 적용
+    applyGravity(direction) {
+        // 좌표 정수화
         for (let block of this.board.blocks) {
             block.shape = block.shape.map(([y, x]) => [Math.round(y), Math.round(x)]);
         }
         this.board.updateGrid();
 
-        // 1. 일반 블록 분해 (ID 변경되므로 먼저 실행)
+        // 블록 분해
         this.gravity.splitNormalBlocks();
 
-        // 2. 시작 위치 저장
-        const startPositions = this.saveBlockPositions();
-
-        // 3. 최종 위치 즉시 계산
+        // 중력 적용
         this.gravity.apply(direction);
-        const endPositions = this.saveBlockPositions();
 
-        // 4. 0.2초 동안 보간 애니메이션
-        const duration = 200;
-        const startTime = Date.now();
-
-        while (Date.now() - startTime < duration) {
-            const elapsed = Date.now() - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-
-            this.interpolatePositions(startPositions, endPositions, progress);
-            this.board.updateGrid();
-            this.render();
-
-            if (progress < 1) {
-                await this.nextFrame();
-            }
-        }
-
-        // 4. 최종 위치 확정
-        this.restoreBlockPositions(endPositions);
+        // 최종 위치 확정
         this.board.updateGrid();
-    }
-
-    // 블록 위치 저장
-    saveBlockPositions() {
-        return this.board.blocks.map(block => ({
-            id: block.id,
-            type: block.type,
-            shape: block.shape.map(([y, x]) => [y, x])
-        }));
-    }
-
-    // 블록 위치 복원
-    restoreBlockPositions(positions) {
-        for (let pos of positions) {
-            const block = this.board.blocks.find(b => b.id === pos.id);
-            if (block) {
-                block.shape = pos.shape.map(([y, x]) => [y, x]);
-            }
-        }
-    }
-
-    // 위치 보간
-    interpolatePositions(startPos, endPos, progress) {
-        for (let i = 0; i < this.board.blocks.length; i++) {
-            const block = this.board.blocks[i];
-            const start = startPos.find(p => p.id === block.id);
-            const end = endPos.find(p => p.id === block.id);
-
-            if (start && end) {
-                block.shape = start.shape.map((startCell, idx) => {
-                    const [sy, sx] = startCell;
-                    const [ey, ex] = end.shape[idx];
-                    const y = sy + (ey - sy) * progress;
-                    const x = sx + (ex - sx) * progress;
-                    return [y, x];
-                });
-            }
-        }
-    }
-
-    // 라인 제거 애니메이션
-    async removeLinesWithAnimation(lines) {
-        if (lines.length === 0) return;
-
-        // 제거될 셀 정보 가져오기
-        const cellsToRemove = this.board.getLineCells(lines);
-
-        // 0.2초 동안 축소 애니메이션
-        const duration = 200;
-        const startTime = Date.now();
-
-        while (Date.now() - startTime < duration) {
-            const elapsed = Date.now() - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            const scale = 1.0 - progress; // 1.0 -> 0.0
-
-            // 보드 먼저 그리고, 제거될 셀은 스케일로 덮어그리기
-            this.renderer.renderBoard(this.board, this.currentPreview);
-            this.renderer.drawScaledCells(cellsToRemove, scale);
-
-            if (progress < 1) {
-                await this.nextFrame();
-            }
-        }
-
-        // 실제 제거
-        this.board.removeLines(lines);
-    }
-
-    // 다음 프레임 대기
-    nextFrame() {
-        return new Promise(resolve => requestAnimationFrame(resolve));
-    }
-
-    // 딜레이 헬퍼
-    delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        this.render();
     }
 
     // 예고 블록 실제 생성
