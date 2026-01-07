@@ -10,8 +10,11 @@ class UI {
         this.mainMenu = document.getElementById('main-menu');
         this.tutorialOverlay = document.getElementById('tutorial-overlay');
         this.gameContainer = document.getElementById('game-container');
+        this.settingsOverlay = document.getElementById('settings-overlay');
+        this.debugOverlay = document.getElementById('debug-overlay');
 
         this.setupMenuEvents();
+        this.setupSettingsEvents();
     }
 
     setupMenuEvents() {
@@ -55,6 +58,77 @@ class UI {
 
     hideTutorial() {
         this.tutorialOverlay.classList.add('hidden');
+    }
+
+    setupSettingsEvents() {
+        // 설정 버튼
+        document.getElementById('settings-btn').onclick = () => {
+            this.showSettings();
+        };
+
+        // 디버그 메뉴 버튼
+        document.getElementById('debug-menu-btn').onclick = () => {
+            this.hideSettings();
+            this.showDebug();
+        };
+
+        // 설정 닫기
+        document.getElementById('close-settings-btn').onclick = () => {
+            this.hideSettings();
+        };
+
+        // 디버그 적용
+        document.getElementById('apply-debug-btn').onclick = () => {
+            if (this.onApplyDebug) this.onApplyDebug();
+        };
+
+        // 디버그 닫기
+        document.getElementById('close-debug-btn').onclick = () => {
+            this.hideDebug();
+        };
+
+        // 오버레이 클릭 시 닫기
+        this.settingsOverlay.onclick = (e) => {
+            if (e.target === this.settingsOverlay) this.hideSettings();
+        };
+
+        this.debugOverlay.onclick = (e) => {
+            if (e.target === this.debugOverlay) this.hideDebug();
+        };
+    }
+
+    showSettings() {
+        this.settingsOverlay.classList.remove('hidden');
+    }
+
+    hideSettings() {
+        this.settingsOverlay.classList.add('hidden');
+    }
+
+    showDebug() {
+        this.debugOverlay.classList.remove('hidden');
+    }
+
+    hideDebug() {
+        this.debugOverlay.classList.add('hidden');
+    }
+
+    getDebugConfig() {
+        return {
+            blockCount: parseInt(document.getElementById('block-count').value),
+            normalRatio: parseFloat(document.getElementById('normal-ratio').value),
+            steelRatio: parseFloat(document.getElementById('steel-ratio').value),
+            bombChance: parseInt(document.getElementById('bomb-chance').value),
+            bombRange: parseInt(document.getElementById('bomb-range').value)
+        };
+    }
+
+    setDebugConfig(config) {
+        document.getElementById('block-count').value = config.blockCount;
+        document.getElementById('normal-ratio').value = config.normalRatio;
+        document.getElementById('steel-ratio').value = config.steelRatio;
+        document.getElementById('bomb-chance').value = config.bombChance;
+        document.getElementById('bomb-range').value = config.bombRange;
     }
 
     updateScore(score) {

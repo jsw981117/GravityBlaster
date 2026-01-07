@@ -23,14 +23,16 @@ function getRandomShape() {
     return BLOCK_SHAPES[key];
 }
 
-// 랜덤 블록 타입 (80% normal, 20% steel)
-function getRandomType() {
-    return Math.random() < 0.8 ? 'normal' : 'steel';
+// 랜덤 블록 타입 (설정 기반)
+function getRandomType(normalRatio, steelRatio) {
+    const rand = Math.random();
+    if (rand < normalRatio) return 'normal';
+    return 'steel';
 }
 
-// 폭탄 여부 (5%)
-function isBombBlock() {
-    return Math.random() < 0.05;
+// 폭탄 여부 (설정 기반)
+function isBombBlock(bombChance) {
+    return Math.random() * 100 < bombChance;
 }
 
 // 배열 깊은 복사
@@ -55,6 +57,22 @@ function getNeighbors8(y, x) {
     const neighbors = [];
     for (let dy = -1; dy <= 1; dy++) {
         for (let dx = -1; dx <= 1; dx++) {
+            if (dy === 0 && dx === 0) continue;
+            const ny = y + dy;
+            const nx = x + dx;
+            if (isInBounds(ny, nx)) {
+                neighbors.push([ny, nx]);
+            }
+        }
+    }
+    return neighbors;
+}
+
+// 범위 내 주변 좌표 (폭탄 범위 설정용)
+function getNeighborsInRange(y, x, range) {
+    const neighbors = [];
+    for (let dy = -range; dy <= range; dy++) {
+        for (let dx = -range; dx <= range; dx++) {
             if (dy === 0 && dx === 0) continue;
             const ny = y + dy;
             const nx = x + dx;

@@ -2,7 +2,7 @@
 let blockIdCounter = 0;
 
 class Block {
-    constructor(type, shape, startY, startX) {
+    constructor(type, shape, startY, startX, bombChance = 5) {
         this.id = ++blockIdCounter;
         this.type = type; // 'normal' | 'steel'
         this.shape = []; // [[y, x], [y, x], ...]
@@ -15,7 +15,7 @@ class Block {
         }
 
         // 폭탄 블록인 경우 랜덤 칸 하나를 폭탄으로
-        if (isBombBlock() && this.shape.length > 0) {
+        if (isBombBlock(bombChance) && this.shape.length > 0) {
             const bombIndex = Math.floor(Math.random() * this.shape.length);
             this.bombCell = this.shape[bombIndex]; // [y, x]
         }

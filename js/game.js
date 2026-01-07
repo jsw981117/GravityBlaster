@@ -19,11 +19,38 @@ class Game {
         this.previewBlocks = []; // 다음에 생성될 블록들
         this.currentPreview = []; // 현재 보드에 표시할 예고
 
+        // 디버그 설정
+        this.config = {
+            blockCount: 1,
+            normalRatio: 0.0,
+            steelRatio: 1.0,
+            bombChance: 5,
+            bombRange: 2
+        };
+
         // UI 이벤트 연결
         this.ui.onStartGame = () => this.startGame();
+        this.ui.onApplyDebug = () => this.applyDebugConfig();
+
+        // 설정 초기화
+        this.ui.setDebugConfig(this.config);
 
         // 메인화면 표시
         this.ui.showMainMenu();
+    }
+
+    applyDebugConfig() {
+        const newConfig = this.ui.getDebugConfig();
+
+        // 비율 합 검증
+        if (Math.abs(newConfig.normalRatio + newConfig.steelRatio - 1.0) > 0.01) {
+            alert('일반 블록과 강철 블록 비율의 합이 1이어야 합니다.');
+            return;
+        }
+
+        Object.assign(this.config, newConfig);
+        this.ui.hideDebug();
+        alert('설정이 적용되었습니다.');
     }
 
     startGame() {
@@ -44,20 +71,21 @@ class Game {
         this.paused = false;
         this.ui.updateScore(0);
 
-        // 첫 블록 2개 생성
-        const firstBlocks = this.generateBlocks(2);
+        // 첫 블록 생성 (config.blockCount 개수)
+        const firstBlocks = this.generateBlocks();
         for (let preview of firstBlocks) {
             const block = new Block(
                 preview.type,
                 preview.shape,
                 preview.position.y,
-                preview.position.x
+                preview.position.x,
+                this.config.bombChance
             );
             this.board.addBlock(block);
         }
 
         // 다음 예고 생성
-        this.previewBlocks = this.generateBlocks(2);
+        this.previewBlocks = this.generateBlocks();
         this.updatePreviewDisplay();
 
         if (!this.previewBlocks) {
@@ -69,12 +97,13 @@ class Game {
     }
 
     // 블록 생성
-    generateBlocks(count) {
+    generateBlocks() {
+        const count = this.config.blockCount;
         const newBlocks = [];
         const occupiedCells = new Set(); // 예약된 칸
 
         for (let i = 0; i < count; i++) {
-            const type = getRandomType();
+            const type = getRandomType(this.config.normalRatio, this.config.steelRatio);
             const shape = getRandomShape();
             const position = this.findPreviewPosition(shape, occupiedCells);
 
@@ -187,7 +216,7 @@ class Game {
 
             // 다음 턴 준비
             this.spawnPreview();
-            this.previewBlocks = this.generateBlocks(2);
+            this.previewBlocks = this.generateBlocks();
 
             if (!this.previewBlocks) {
                 this.gameOver();
@@ -219,7 +248,7 @@ class Game {
             if (lines.length === 0) break;
 
             // 라인 제거
-            this.board.removeLines(lines);
+            this.board.removeLines(lines, this.config.bombRange);
             chain++;
         }
 
@@ -250,24 +279,47 @@ class Game {
 
     // 예고 블록 실제 생성
     spawnPreview() {
-        // 1. 먼저 모든 예고가 생성 가능한지 체크
         for (let preview of this.currentPreview) {
-            if (!this.board.canPlace(preview.shape, preview.position.y, preview.position.x)) {
-                this.gameOver();
-                return;
-            }
-        }
+            let spawnY = preview.position.y;
+            let spawnX = preview.position.x;
 
-        // 2. 모두 가능하면 생성
-        for (let preview of this.currentPreview) {
+            // 예고 위치에 배치 가능한지 확인
+            if (!this.board.canPlace(preview.shape, spawnY, spawnX)) {
+                // 불가능하면 다른 빈 공간 찾기
+                const newPosition = this.findEmptyPosition(preview.shape);
+
+                if (!newPosition) {
+                    // 배치 가능한 공간이 전혀 없음 → 게임 오버
+                    this.gameOver();
+                    return;
+                }
+
+                spawnY = newPosition.y;
+                spawnX = newPosition.x;
+            }
+
+            // 찾은 위치에 생성
             const block = new Block(
                 preview.type,
                 preview.shape,
-                preview.position.y,
-                preview.position.x
+                spawnY,
+                spawnX,
+                this.config.bombChance
             );
             this.board.addBlock(block);
         }
+    }
+
+    // 빈 공간 찾기
+    findEmptyPosition(shape) {
+        for (let y = 0; y < 8; y++) {
+            for (let x = 0; x < 8; x++) {
+                if (this.board.canPlace(shape, y, x)) {
+                    return { y, x };
+                }
+            }
+        }
+        return null; // 배치 불가
     }
 
     // 예고 표시 업데이트

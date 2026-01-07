@@ -162,7 +162,7 @@ class Board {
     }
 
     // 라인 제거
-    removeLines(lines) {
+    removeLines(lines, bombRange = 1) {
         const toRemove = new Set(); // [y, x] 문자열 형태로 저장
         const bombsToExplode = [];
 
@@ -185,9 +185,9 @@ class Board {
             }
         }
 
-        // 폭탄 폭발 처리 (주변 8칸)
+        // 폭탄 폭발 처리 (범위 설정 기반)
         for (let [by, bx] of bombsToExplode) {
-            const neighbors = getNeighbors8(by, bx);
+            const neighbors = getNeighborsInRange(by, bx, bombRange);
             for (let [ny, nx] of neighbors) {
                 toRemove.add(`${ny},${nx}`);
             }
