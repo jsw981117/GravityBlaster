@@ -164,29 +164,37 @@ class Game {
 
         this.state = 'animating';
 
-        // 턴 처리 (애니메이션 포함)
-        const chain = await this.processTurn(direction);
+        try {
+            // 턴 처리 (애니메이션 포함)
+            const chain = await this.processTurn(direction);
 
-        // 점수 계산
-        this.addScore(chain);
+            // 점수 계산
+            this.addScore(chain);
 
-        // 다음 턴 준비
-        this.spawnPreview();
-        this.previewBlocks = this.generateBlocks(2);
+            // 다음 턴 준비
+            this.spawnPreview();
+            this.previewBlocks = this.generateBlocks(2);
 
-        if (!this.previewBlocks) {
-            this.gameOver();
-        } else {
-            this.updatePreviewDisplay();
-            this.state = 'waiting';
-        }
+            if (!this.previewBlocks) {
+                this.gameOver();
+            } else {
+                this.updatePreviewDisplay();
+            }
 
-        this.render();
+            this.render();
+        } catch (error) {
+            console.error('Animation error:', error);
+        } finally {
+            // 에러 발생 여부와 관계없이 state 복구
+            if (this.state !== 'gameover') {
+                this.state = 'waiting';
+            }
 
-        // 큐에 대기 중인 입력 처리
-        if (this.inputQueue.length > 0) {
-            const nextDirection = this.inputQueue.shift();
-            this.onSwipe(nextDirection);
+            // 큐에 대기 중인 입력 처리
+            if (this.inputQueue.length > 0) {
+                const nextDirection = this.inputQueue.shift();
+                this.onSwipe(nextDirection);
+            }
         }
     }
 

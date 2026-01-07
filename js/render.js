@@ -97,6 +97,7 @@ class Renderer {
     // 스케일된 셀들 렌더링 (제거 애니메이션용)
     drawScaledCells(cells, scale) {
         for (let cell of cells) {
+            // cell: {y: 행, x: 열}이지만 drawCell(x, y)이므로 순서 맞춤
             this.drawCell(cell.x, cell.y, cell.color, cell.isBomb, scale);
         }
     }
