@@ -3,6 +3,7 @@ class Game {
         this.board = new Board();
         this.gravity = new Gravity(this.board);
         this.renderer = new Renderer(document.getElementById('game-canvas'));
+        this.animator = new Animator(this.renderer);
         this.ui = new UI();
         this.inputHandler = new InputHandler(
             document.getElementById('game-canvas'),
@@ -61,20 +62,27 @@ class Game {
         this.init();
     }
 
-    init() {
+    async init() {
         // 보드 초기화
         this.board.clear();
         this.score = 0;
-        this.state = 'waiting';
+        this.state = 'animating';
         this.paused = false;
         this.ui.updateScore(0);
 
-        // 첫 블록 즉시 생성
-        if (!this.spawnBlocks()) {
+        // 첫 블록 생성
+        const spawnData = this.spawnBlocksWithData();
+        if (!spawnData) {
             this.gameOver();
             return;
         }
 
+        // 생성 애니메이션
+        this.startAnimationLoop();
+        await this.animator.playSpawn(spawnData);
+        this.stopAnimationLoop();
+
+        this.state = 'waiting';
         this.render();
     }
 
@@ -101,6 +109,42 @@ class Game {
         }
 
         return true;
+    }
+
+    // 블록 생성 + 애니메이션 데이터 반환
+    spawnBlocksWithData() {
+        const count = this.config.blockCount;
+        const spawnData = [];
+
+        for (let i = 0; i < count; i++) {
+            const shape = getRandomShape();
+
+            // 최적 생성 위치 찾기
+            const position = this.findBestSpawnPosition(shape);
+
+            if (!position) {
+                return null; // 게임 오버
+            }
+
+            // 각 셀에 색상 할당 (셀별 폭탄 확률, 같은 색 최대 2개)
+            const colors = this.assignBlockColors(shape.length, position.y, position.x, shape);
+
+            // 블록 생성
+            const block = new Block(colors, shape, position.y, position.x);
+            this.board.addBlock(block);
+
+            // 각 셀의 위치와 색상 정보 수집
+            for (let j = 0; j < block.shape.length; j++) {
+                const [y, x] = block.shape[j];
+                spawnData.push({
+                    y: y,
+                    x: x,
+                    color: block.getColorAt(j)
+                });
+            }
+        }
+
+        return spawnData;
     }
 
     // 블록 각 셀에 색상 할당 (셀별 폭탄 확률, 같은 색 최대 2개)
@@ -278,22 +322,28 @@ class Game {
     }
 
     // 스와이프 입력 처리
-    onSwipe(direction) {
+    async onSwipe(direction) {
         if (this.state !== 'waiting' || this.paused) return;
 
         this.state = 'animating';
 
         try {
-            // 턴 처리
-            const matchInfo = this.processTurn(direction);
+            // 턴 처리 (비동기)
+            const matchInfo = await this.processTurn(direction);
 
             // 점수 계산
             this.addScore(matchInfo);
 
-            // 다음 블록 생성
-            if (!this.spawnBlocks()) {
+            // 다음 블록 생성 + 애니메이션
+            const spawnData = this.spawnBlocksWithData();
+            if (!spawnData) {
                 this.gameOver();
+                return;
             }
+
+            this.startAnimationLoop();
+            await this.animator.playSpawn(spawnData);
+            this.stopAnimationLoop();
 
             this.render();
         } catch (error) {
@@ -307,13 +357,18 @@ class Game {
     }
 
     // 턴 처리 (중력 + 연쇄)
-    processTurn(direction) {
+    async processTurn(direction) {
         let totalMatches = [];
         let chain = 0;
 
+        this.startAnimationLoop();
+
         while (true) {
-            // 중력 적용
-            this.applyGravity(direction);
+            // 중력 적용 + 이동 애니메이션
+            const moveData = this.applyGravity(direction);
+            if (moveData.length > 0) {
+                await this.animator.playMove(moveData);
+            }
 
             // 매치 판정
             const matches = this.board.findMatches();
@@ -324,10 +379,24 @@ class Game {
                 totalMatches.push({ ...match, chain });
             }
 
+            // 제거 애니메이션
+            const removeCells = this.board.getMatchCells(matches, this.config.bombRange);
+            await this.animator.playRemove(removeCells);
+
+            // 점수 팝업 애니메이션
+            if (removeCells.length > 0) {
+                const centerY = removeCells.reduce((sum, c) => sum + c.y, 0) / removeCells.length;
+                const centerX = removeCells.reduce((sum, c) => sum + c.x, 0) / removeCells.length;
+                const chainScore = this.calculateChainScore(removeCells.length, chain);
+                this.animator.playScorePopup(centerX, centerY, chainScore); // 병렬 실행
+            }
+
             // 매치 제거
             this.board.removeMatches(matches, this.config.bombRange);
             chain++;
         }
+
+        this.stopAnimationLoop();
 
         // UI 업데이트
         this.ui.updateGravityIndicator(direction);
@@ -335,7 +404,7 @@ class Game {
         return totalMatches;
     }
 
-    // 중력 적용
+    // 중력 적용 (이동 데이터 반환)
     applyGravity(direction) {
         // 좌표 정수화
         for (let block of this.board.blocks) {
@@ -346,12 +415,25 @@ class Game {
         // 블록 분해 (모든 블록 → 1x1)
         this.gravity.splitBlocks();
 
-        // 중력 적용
-        this.gravity.apply(direction);
+        // 중력 적용 + 이동 데이터 반환
+        const moveData = this.gravity.apply(direction);
 
         // 최종 위치 확정
         this.board.updateGrid();
-        this.render();
+
+        return moveData;
+    }
+
+    // 연쇄 점수 계산
+    calculateChainScore(cellCount, chain) {
+        let score = 100; // 기본 3셀
+        if (cellCount > 3) {
+            score += (cellCount - 3) * 50;
+        }
+        if (chain > 0) {
+            score += chain * 100;
+        }
+        return score;
     }
 
     // 점수 추가 (매치 기반)
@@ -382,6 +464,36 @@ class Game {
     // 렌더링
     render() {
         this.renderer.renderBoard(this.board);
+    }
+
+    // 애니메이션 루프 시작
+    startAnimationLoop() {
+        if (this.animationLoopId) return;
+
+        const loop = () => {
+            if (!this.animator.isPlaying()) {
+                this.render();
+                return;
+            }
+
+            // 애니메이션 상태 가져오기
+            const animState = this.animator.getAnimationState();
+
+            // 보드 + 애니메이션 렌더링
+            this.renderer.renderWithAnimation(this.board, animState);
+
+            this.animationLoopId = requestAnimationFrame(loop);
+        };
+
+        loop();
+    }
+
+    // 애니메이션 루프 정지
+    stopAnimationLoop() {
+        if (this.animationLoopId) {
+            cancelAnimationFrame(this.animationLoopId);
+            this.animationLoopId = null;
+        }
     }
 
     // 게임 오버

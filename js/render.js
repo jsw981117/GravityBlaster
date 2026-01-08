@@ -85,4 +85,79 @@ class Renderer {
             this.drawCell(cell.x, cell.y, cell.color, cell.color === BOMB_COLOR, scale);
         }
     }
+
+    // 애니메이션과 함께 렌더링
+    renderWithAnimation(board, animState) {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // 그리드 라인
+        this.drawGrid();
+
+        // 제거 중인 셀 ID 수집
+        const removingIds = new Set();
+        for (let cell of animState.removingCells) {
+            removingIds.add(`${Math.round(cell.y)},${Math.round(cell.x)}`);
+        }
+
+        // 이동 중인 셀 ID 수집 (원래 위치 숨기기)
+        const movingFromIds = new Set();
+        for (let cell of animState.movingCells) {
+            // 이동 전 위치는 movingCells의 시작 위치를 추적해야 하는데,
+            // 애니메이터에서 이미 lerp된 위치를 제공하므로 board에서 해당 위치 제외
+        }
+
+        // 생성 중인 셀 ID 수집
+        const spawnIds = new Set();
+        for (let cell of animState.spawnCells) {
+            spawnIds.add(`${cell.y},${cell.x}`);
+        }
+
+        // 보드 기본 렌더링 (애니메이션 중인 셀 제외)
+        for (let y = 0; y < board.size; y++) {
+            for (let x = 0; x < board.size; x++) {
+                const key = `${y},${x}`;
+                if (removingIds.has(key) || spawnIds.has(key)) {
+                    continue; // 애니메이션 중인 셀은 별도 렌더링
+                }
+
+                const cell = board.grid[y][x];
+                if (cell) {
+                    this.drawCell(x, y, cell.color, cell.color === BOMB_COLOR);
+                }
+            }
+        }
+
+        // 이동 중인 셀 렌더링
+        for (let cell of animState.movingCells) {
+            this.drawCell(cell.x, cell.y, cell.color, cell.color === BOMB_COLOR);
+        }
+
+        // 제거 중인 셀 렌더링 (축소)
+        for (let cell of animState.removingCells) {
+            this.drawCell(cell.x, cell.y, cell.color, cell.color === BOMB_COLOR, cell.scale);
+        }
+
+        // 생성 중인 셀 렌더링 (확대)
+        for (let cell of animState.spawnCells) {
+            this.drawCell(cell.x, cell.y, cell.color, cell.color === BOMB_COLOR, cell.scale);
+        }
+
+        // 점수 팝업 렌더링
+        for (let popup of animState.scorePopups) {
+            const px = popup.x * this.cellSize + this.cellSize / 2;
+            const py = popup.y * this.cellSize + this.cellSize / 2;
+
+            this.ctx.save();
+            this.ctx.globalAlpha = popup.alpha;
+            this.ctx.font = `bold ${this.cellSize * 0.4}px Arial`;
+            this.ctx.fillStyle = '#FFD700'; // 금색
+            this.ctx.strokeStyle = '#000';
+            this.ctx.lineWidth = 2;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.strokeText(`+${popup.score}`, px, py);
+            this.ctx.fillText(`+${popup.score}`, px, py);
+            this.ctx.restore();
+        }
+    }
 }

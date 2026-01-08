@@ -8,6 +8,21 @@ class Gravity {
     apply(direction) {
         this.direction = direction;
 
+        // 이동 데이터 추적
+        const moveData = new Map(); // blockId -> {fromY, fromX, toY, toX, color}
+
+        // 초기 위치 저장
+        for (let block of this.board.blocks) {
+            const [y, x] = block.shape[0];
+            moveData.set(block.id, {
+                fromY: y,
+                fromX: x,
+                toY: y,
+                toX: x,
+                color: block.colors[0]
+            });
+        }
+
         let moved = false;
 
         do {
@@ -20,6 +35,9 @@ class Gravity {
 
                 if (this.canMove(y, x, ny, nx, block.id)) {
                     block.shape[0] = [ny, nx];
+                    // 최종 위치 업데이트
+                    moveData.get(block.id).toY = ny;
+                    moveData.get(block.id).toX = nx;
                     moved = true;
                 }
             }
@@ -28,6 +46,16 @@ class Gravity {
             this.board.updateGrid();
 
         } while (moved);
+
+        // 실제로 이동한 셀만 필터링
+        const movedCells = [];
+        for (let data of moveData.values()) {
+            if (data.fromY !== data.toY || data.fromX !== data.toX) {
+                movedCells.push(data);
+            }
+        }
+
+        return movedCells;
     }
 
     // 블록 전체가 이동 가능한지 체크 (사용 안 함, 호환성 유지)
