@@ -82,15 +82,63 @@ class Game {
                 return false; // 게임 오버
             }
 
-            // 주변 색상과 겹치지 않는 색 선택
-            const color = isBomb ? null : this.getSafeColor(shape, position.y, position.x);
+            // 각 셀에 색상 할당 (같은 색 최대 2개)
+            const colors = isBomb ? [BOMB_COLOR] : this.assignBlockColors(shape.length, position.y, position.x, shape);
 
             // 블록 생성
-            const block = new Block(color, shape, position.y, position.x, isBomb);
+            const block = new Block(colors, shape, position.y, position.x, isBomb);
             this.board.addBlock(block);
         }
 
         return true;
+    }
+
+    // 블록 각 셀에 색상 할당 (같은 색 최대 2개)
+    assignBlockColors(cellCount, startY, startX, shape) {
+        const colors = [];
+        const colorCount = {}; // 각 색상별 사용 횟수
+        const availableColors = Object.values(GAME_COLORS);
+
+        // 주변 셀 색상 수집 (회피용)
+        const usedColors = new Set();
+        for (let [dy, dx] of shape) {
+            const y = startY + dy;
+            const x = startX + dx;
+            const neighbors = [
+                [y - 1, x], [y + 1, x],
+                [y, x - 1], [y, x + 1]
+            ];
+            for (let [ny, nx] of neighbors) {
+                if (!isInBounds(ny, nx)) continue;
+                const cell = this.board.grid[ny][nx];
+                if (cell && !cell.isBomb) {
+                    usedColors.add(cell.color);
+                }
+            }
+        }
+
+        // 각 셀에 색상 할당
+        for (let i = 0; i < cellCount; i++) {
+            // 2개 미만인 색상들만 선택 가능
+            const validColors = availableColors.filter(c => {
+                const count = colorCount[c] || 0;
+                return count < 2 && !usedColors.has(c);
+            });
+
+            // 유효한 색상이 없으면 주변 색상 무시하고 재시도
+            let selectedColor;
+            if (validColors.length > 0) {
+                selectedColor = validColors[Math.floor(Math.random() * validColors.length)];
+            } else {
+                const fallbackColors = availableColors.filter(c => (colorCount[c] || 0) < 2);
+                selectedColor = fallbackColors[Math.floor(Math.random() * fallbackColors.length)];
+            }
+
+            colors.push(selectedColor);
+            colorCount[selectedColor] = (colorCount[selectedColor] || 0) + 1;
+        }
+
+        return colors;
     }
 
     // 주변과 겹치지 않는 색상 선택

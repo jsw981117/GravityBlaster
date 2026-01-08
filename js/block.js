@@ -2,9 +2,9 @@
 let blockIdCounter = 0;
 
 class Block {
-    constructor(color, shape, startY, startX, isBomb = false) {
+    constructor(colors, shape, startY, startX, isBomb = false) {
         this.id = ++blockIdCounter;
-        this.color = isBomb ? BOMB_COLOR : color;
+        this.colors = isBomb ? [BOMB_COLOR] : colors; // 각 셀의 색상 배열
         this.isBomb = isBomb;
         this.shape = []; // [[y, x], [y, x], ...]
 
@@ -12,6 +12,12 @@ class Block {
         for (let [dy, dx] of shape) {
             this.shape.push([startY + dy, startX + dx]);
         }
+    }
+
+    // 특정 셀의 색상 가져오기
+    getColorAt(index) {
+        if (this.isBomb) return BOMB_COLOR;
+        return this.colors[index] || this.colors[0];
     }
 
     // 블록의 특정 칸 제거

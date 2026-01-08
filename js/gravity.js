@@ -49,8 +49,10 @@ class Gravity {
         for (let block of this.board.blocks) {
             if (block.shape.length > 1) {
                 // 각 칸을 별도 블록으로 분리
-                for (let [y, x] of block.shape) {
-                    const newBlock = new Block(block.color, [[0, 0]], y, x, block.isBomb);
+                for (let i = 0; i < block.shape.length; i++) {
+                    const [y, x] = block.shape[i];
+                    const cellColor = block.getColorAt(i);
+                    const newBlock = new Block([cellColor], [[0, 0]], y, x, block.isBomb);
                     newBlock.shape = [[y, x]]; // 절대 좌표로 직접 설정
                     newBlocks.push(newBlock);
                 }

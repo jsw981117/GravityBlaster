@@ -17,11 +17,12 @@ class Board {
 
         // 모든 블록을 그리드에 반영
         for (let block of this.blocks) {
-            for (let [y, x] of block.shape) {
+            for (let i = 0; i < block.shape.length; i++) {
+                const [y, x] = block.shape[i];
                 if (isInBounds(y, x)) {
                     this.grid[y][x] = {
                         blockId: block.id,
-                        color: block.color,
+                        color: block.getColorAt(i),
                         isBomb: block.isBomb
                     };
                 }
