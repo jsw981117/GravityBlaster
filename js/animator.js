@@ -155,6 +155,8 @@ class Animator {
                     state.movingCells = anim.cells.map(cell => ({
                         y: cell.fromY + (cell.toY - cell.fromY) * anim.progress,
                         x: cell.fromX + (cell.toX - cell.fromX) * anim.progress,
+                        toY: cell.toY,
+                        toX: cell.toX,
                         color: cell.color
                     }));
                     break;

@@ -99,11 +99,10 @@ class Renderer {
             removingIds.add(`${Math.round(cell.y)},${Math.round(cell.x)}`);
         }
 
-        // 이동 중인 셀 ID 수집 (원래 위치 숨기기)
-        const movingFromIds = new Set();
+        // 이동 중인 셀의 최종 위치 숨기기 (board에 이미 최종 위치로 업데이트됨)
+        const movingToIds = new Set();
         for (let cell of animState.movingCells) {
-            // 이동 전 위치는 movingCells의 시작 위치를 추적해야 하는데,
-            // 애니메이터에서 이미 lerp된 위치를 제공하므로 board에서 해당 위치 제외
+            movingToIds.add(`${cell.toY},${cell.toX}`);
         }
 
         // 생성 중인 셀 ID 수집
@@ -116,7 +115,7 @@ class Renderer {
         for (let y = 0; y < board.size; y++) {
             for (let x = 0; x < board.size; x++) {
                 const key = `${y},${x}`;
-                if (removingIds.has(key) || spawnIds.has(key)) {
+                if (removingIds.has(key) || spawnIds.has(key) || movingToIds.has(key)) {
                     continue; // 애니메이션 중인 셀은 별도 렌더링
                 }
 
