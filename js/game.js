@@ -73,7 +73,6 @@ class Game {
         for (let i = 0; i < count; i++) {
             // 폭탄 확률 체크
             const isBomb = isBombBlock(this.config.bombChance);
-            const color = isBomb ? null : getRandomColor();
             const shape = getRandomShape();
 
             // 최적 생성 위치 찾기
@@ -83,12 +82,51 @@ class Game {
                 return false; // 게임 오버
             }
 
+            // 주변 색상과 겹치지 않는 색 선택
+            const color = isBomb ? null : this.getSafeColor(shape, position.y, position.x);
+
             // 블록 생성
             const block = new Block(color, shape, position.y, position.x, isBomb);
             this.board.addBlock(block);
         }
 
         return true;
+    }
+
+    // 주변과 겹치지 않는 색상 선택
+    getSafeColor(shape, startY, startX) {
+        const colors = Object.values(GAME_COLORS);
+        const usedColors = new Set();
+
+        // 블록이 차지할 모든 셀의 인접 셀 색상 수집
+        for (let [dy, dx] of shape) {
+            const y = startY + dy;
+            const x = startX + dx;
+
+            // 상하좌우 인접 셀 체크
+            const neighbors = [
+                [y - 1, x], [y + 1, x],
+                [y, x - 1], [y, x + 1]
+            ];
+
+            for (let [ny, nx] of neighbors) {
+                if (!isInBounds(ny, nx)) continue;
+                const cell = this.board.grid[ny][nx];
+                if (cell && !cell.isBomb) {
+                    usedColors.add(cell.color);
+                }
+            }
+        }
+
+        // 사용되지 않은 색상 중 랜덤 선택
+        const availableColors = colors.filter(c => !usedColors.has(c));
+
+        if (availableColors.length > 0) {
+            return availableColors[Math.floor(Math.random() * availableColors.length)];
+        }
+
+        // 모든 색이 사용 중이면 그냥 랜덤 (4색이므로 거의 없음)
+        return colors[Math.floor(Math.random() * colors.length)];
     }
 
     // 최적 생성 위치 찾기 (빈 공간 중앙 선호, 기존 블록+보드 끝에서 멀게)
