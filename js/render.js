@@ -26,7 +26,7 @@ class Renderer {
             for (let x = 0; x < board.size; x++) {
                 const cell = board.grid[y][x];
                 if (cell) {
-                    this.drawCell(x, y, cell.color, cell.isBomb);
+                    this.drawCell(x, y, cell.color, cell.color === BOMB_COLOR);
                 }
             }
         }
@@ -82,7 +82,7 @@ class Renderer {
     drawScaledCells(cells, scale) {
         for (let cell of cells) {
             // cell: {y: 행, x: 열}이지만 drawCell(x, y)이므로 순서 맞춤
-            this.drawCell(cell.x, cell.y, cell.color, cell.isBomb, scale);
+            this.drawCell(cell.x, cell.y, cell.color, cell.color === BOMB_COLOR, scale);
         }
     }
 }

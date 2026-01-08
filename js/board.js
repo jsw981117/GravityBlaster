@@ -23,8 +23,7 @@ class Board {
                 if (isInBounds(y, x)) {
                     this.grid[y][x] = {
                         blockId: block.id,
-                        color: block.getColorAt(i),
-                        isBomb: block.isBomb
+                        color: block.getColorAt(i)
                     };
                 }
             }
@@ -80,6 +79,11 @@ class Board {
         return false;
     }
 
+    // 블록이 격리된 위치에 배치 가능한지 (기존 블록과 인접 금지)
+    canPlaceIsolated(shape, startY, startX) {
+        return this.canPlace(shape, startY, startX) && !this.hasAdjacentBlock(shape, startY, startX);
+    }
+
     // 가장자리인지 체크
     isEdge(shape, startY, startX) {
         for (let [dy, dx] of shape) {
@@ -99,7 +103,7 @@ class Board {
 
         for (let y = 0; y < this.size; y++) {
             for (let x = 0; x < this.size; x++) {
-                if (visited[y][x] || !this.grid[y][x] || this.grid[y][x].isBomb) continue;
+                if (visited[y][x] || !this.grid[y][x] || this.grid[y][x].color === BOMB_COLOR) continue;
 
                 const color = this.grid[y][x].color;
                 const group = [];
@@ -119,7 +123,7 @@ class Board {
 
                     for (let [ny, nx] of neighbors) {
                         if (!isInBounds(ny, nx) || visited[ny][nx]) continue;
-                        if (!this.grid[ny][nx] || this.grid[ny][nx].isBomb) continue;
+                        if (!this.grid[ny][nx] || this.grid[ny][nx].color === BOMB_COLOR) continue;
                         if (this.grid[ny][nx].color !== color) continue;
 
                         visited[ny][nx] = true;
@@ -162,7 +166,7 @@ class Board {
 
                 for (let [ny, nx] of neighbors) {
                     if (!isInBounds(ny, nx) || !this.grid[ny][nx]) continue;
-                    if (this.grid[ny][nx].isBomb) {
+                    if (this.grid[ny][nx].color === BOMB_COLOR) {
                         // 폭탄 주변 8칸 제거
                         const explosionCells = getNeighborsInRange(ny, nx, bombRange);
                         for (let [ey, ex] of explosionCells) {
@@ -180,8 +184,7 @@ class Board {
             if (this.grid[y] && this.grid[y][x]) {
                 cellData.push({
                     y, x,
-                    color: this.grid[y][x].color,
-                    isBomb: this.grid[y][x].isBomb
+                    color: this.grid[y][x].color
                 });
             }
         }
@@ -211,7 +214,7 @@ class Board {
 
                 for (let [ny, nx] of neighbors) {
                     if (!isInBounds(ny, nx) || !this.grid[ny][nx]) continue;
-                    if (this.grid[ny][nx].isBomb) {
+                    if (this.grid[ny][nx].color === BOMB_COLOR) {
                         // 폭탄 주변 제거
                         const explosionCells = getNeighborsInRange(ny, nx, bombRange);
                         for (let [ey, ex] of explosionCells) {

@@ -2,10 +2,9 @@
 let blockIdCounter = 0;
 
 class Block {
-    constructor(colors, shape, startY, startX, isBomb = false) {
+    constructor(colors, shape, startY, startX) {
         this.id = ++blockIdCounter;
-        this.colors = isBomb ? [BOMB_COLOR] : colors; // 각 셀의 색상 배열
-        this.isBomb = isBomb;
+        this.colors = colors; // 각 셀의 색상 배열 (BOMB_COLOR 포함 가능)
         this.shape = []; // [[y, x], [y, x], ...]
 
         // shape을 절대 좌표로 변환
@@ -16,7 +15,6 @@ class Block {
 
     // 특정 셀의 색상 가져오기
     getColorAt(index) {
-        if (this.isBomb) return BOMB_COLOR;
         return this.colors[index] || this.colors[0];
     }
 

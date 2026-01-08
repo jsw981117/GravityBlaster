@@ -52,7 +52,7 @@ class Gravity {
                 for (let i = 0; i < block.shape.length; i++) {
                     const [y, x] = block.shape[i];
                     const cellColor = block.getColorAt(i);
-                    const newBlock = new Block([cellColor], [[0, 0]], y, x, block.isBomb);
+                    const newBlock = new Block([cellColor], [[0, 0]], y, x);
                     newBlock.shape = [[y, x]]; // 절대 좌표로 직접 설정
                     newBlocks.push(newBlock);
                 }

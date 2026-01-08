@@ -83,8 +83,6 @@ class Game {
         const count = this.config.blockCount;
 
         for (let i = 0; i < count; i++) {
-            // 폭탄 확률 체크
-            const isBomb = isBombBlock(this.config.bombChance);
             const shape = getRandomShape();
 
             // 최적 생성 위치 찾기
@@ -94,18 +92,18 @@ class Game {
                 return false; // 게임 오버
             }
 
-            // 각 셀에 색상 할당 (같은 색 최대 2개)
-            const colors = isBomb ? [BOMB_COLOR] : this.assignBlockColors(shape.length, position.y, position.x, shape);
+            // 각 셀에 색상 할당 (셀별 폭탄 확률, 같은 색 최대 2개)
+            const colors = this.assignBlockColors(shape.length, position.y, position.x, shape);
 
             // 블록 생성
-            const block = new Block(colors, shape, position.y, position.x, isBomb);
+            const block = new Block(colors, shape, position.y, position.x);
             this.board.addBlock(block);
         }
 
         return true;
     }
 
-    // 블록 각 셀에 색상 할당 (같은 색 최대 2개)
+    // 블록 각 셀에 색상 할당 (셀별 폭탄 확률, 같은 색 최대 2개)
     assignBlockColors(cellCount, startY, startX, shape) {
         const colors = [];
         const colorCount = {}; // 각 색상별 사용 횟수
@@ -123,7 +121,7 @@ class Game {
             for (let [ny, nx] of neighbors) {
                 if (!isInBounds(ny, nx)) continue;
                 const cell = this.board.grid[ny][nx];
-                if (cell && !cell.isBomb) {
+                if (cell && cell.color !== BOMB_COLOR) {
                     usedColors.add(cell.color);
                 }
             }
@@ -131,6 +129,12 @@ class Game {
 
         // 각 셀에 색상 할당
         for (let i = 0; i < cellCount; i++) {
+            // 폭탄 확률 체크
+            if (Math.random() * 100 < this.config.bombChance) {
+                colors.push(BOMB_COLOR);
+                continue;
+            }
+
             // 2개 미만인 색상들만 선택 가능
             const validColors = availableColors.filter(c => {
                 const count = colorCount[c] || 0;
@@ -172,7 +176,7 @@ class Game {
             for (let [ny, nx] of neighbors) {
                 if (!isInBounds(ny, nx)) continue;
                 const cell = this.board.grid[ny][nx];
-                if (cell && !cell.isBomb) {
+                if (cell && cell.color !== BOMB_COLOR) {
                     usedColors.add(cell.color);
                 }
             }
@@ -189,49 +193,88 @@ class Game {
         return colors[Math.floor(Math.random() * colors.length)];
     }
 
-    // 최적 생성 위치 찾기 (빈 공간 중앙 선호, 기존 블록+보드 끝에서 멀게)
-    findBestSpawnPosition(shape) {
-        const candidates = [];
-        const size = this.board.size;
-        const center = (size - 1) / 2;
+    // 빈 영역 그룹핑
+    findEmptyRegions() {
+        const visited = Array(this.board.size).fill(null).map(() => Array(this.board.size).fill(false));
+        const regions = [];
 
-        // 보드 전체 스캔
-        for (let y = 0; y < size; y++) {
-            for (let x = 0; x < size; x++) {
-                if (!this.board.canPlace(shape, y, x)) continue;
+        for (let y = 0; y < this.board.size; y++) {
+            for (let x = 0; x < this.board.size; x++) {
+                if (visited[y][x] || !this.board.isEmpty(y, x)) continue;
 
-                let score = 0;
+                const cells = [];
+                const queue = [[y, x]];
+                visited[y][x] = true;
 
-                // 보드 중앙에 가까울수록 높은 점수
-                const centerDist = Math.abs(y - center) + Math.abs(x - center);
-                score += (size * 2 - 1 - centerDist) * 10;
+                // BFS로 연결된 빈 공간 찾기
+                while (queue.length > 0) {
+                    const [cy, cx] = queue.shift();
+                    cells.push([cy, cx]);
 
-                // 기존 블록과 거리 계산 (멀수록 높은 점수)
-                let minBlockDist = 99;
-                for (let by = 0; by < size; by++) {
-                    for (let bx = 0; bx < size; bx++) {
-                        if (!this.board.isEmpty(by, bx)) {
-                            const dist = Math.abs(by - y) + Math.abs(bx - x);
-                            minBlockDist = Math.min(minBlockDist, dist);
-                        }
+                    const neighbors = [
+                        [cy - 1, cx], [cy + 1, cx],
+                        [cy, cx - 1], [cy, cx + 1]
+                    ];
+
+                    for (let [ny, nx] of neighbors) {
+                        if (!isInBounds(ny, nx) || visited[ny][nx]) continue;
+                        if (!this.board.isEmpty(ny, nx)) continue;
+
+                        visited[ny][nx] = true;
+                        queue.push([ny, nx]);
                     }
                 }
-                score += minBlockDist * 5;
 
-                // 가장자리 페널티
-                if (this.board.isEdge(shape, y, x)) {
-                    score -= 20;
-                }
-
-                candidates.push({ y, x, score });
+                regions.push({ cells, center: this.calculateRegionCenter(cells) });
             }
         }
 
-        if (candidates.length === 0) return null;
+        return regions;
+    }
 
-        // 점수 높은 순 정렬
-        candidates.sort((a, b) => b.score - a.score);
-        return candidates[0];
+    // 영역 중심 계산
+    calculateRegionCenter(cells) {
+        let sumY = 0, sumX = 0;
+        for (let [y, x] of cells) {
+            sumY += y;
+            sumX += x;
+        }
+        return {
+            y: Math.round(sumY / cells.length),
+            x: Math.round(sumX / cells.length)
+        };
+    }
+
+    // 최적 생성 위치 찾기 (가장 큰 빈 영역 중심 우선, 격리 필수)
+    findBestSpawnPosition(shape) {
+        const regions = this.findEmptyRegions();
+
+        // 크기 순 정렬
+        regions.sort((a, b) => b.cells.length - a.cells.length);
+
+        // 가장 큰 영역부터 시도
+        for (let region of regions) {
+            const candidates = [];
+
+            // 격리된 위치 찾기
+            for (let y = 0; y < this.board.size; y++) {
+                for (let x = 0; x < this.board.size; x++) {
+                    if (!this.board.canPlaceIsolated(shape, y, x)) continue;
+
+                    // 영역 중심과의 거리
+                    const dist = Math.abs(y - region.center.y) + Math.abs(x - region.center.x);
+                    candidates.push({ y, x, dist });
+                }
+            }
+
+            if (candidates.length > 0) {
+                // 중심에 가장 가까운 위치 선택
+                candidates.sort((a, b) => a.dist - b.dist);
+                return candidates[0];
+            }
+        }
+
+        return null;
     }
 
     // 스와이프 입력 처리
