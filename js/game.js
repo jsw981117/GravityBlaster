@@ -20,7 +20,8 @@ class Game {
             blockCount: 1,
             bombChance: 5,
             bombRange: 2,
-            boardSize: 8
+            boardSize: 8,
+            animationSpeed: 1.0
         };
 
         // UI 이벤트 연결
@@ -47,6 +48,9 @@ class Game {
                 this.init();
             }
         }
+
+        // 애니메이션 속도 적용
+        this.animator.setSpeed(this.config.animationSpeed);
 
         this.ui.hideDebug();
         alert('설정이 적용되었습니다.');

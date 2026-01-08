@@ -4,6 +4,12 @@ class Animator {
         this.activeAnimations = [];
         this.isRunning = false;
         this.animationFrameId = null;
+        this.speed = 1.0; // 속도 배율 (1.0 = 기본, 2.0 = 2배 빠름, 0.5 = 2배 느림)
+    }
+
+    // 애니메이션 속도 설정
+    setSpeed(speed) {
+        this.speed = Math.max(0.1, Math.min(5.0, speed)); // 0.1 ~ 5.0 범위
     }
 
     // 애니메이션 루프 시작
@@ -59,7 +65,7 @@ class Animator {
                 type: 'remove',
                 cells: cells,
                 startTime: performance.now(),
-                duration: 150, // 0.15초
+                duration: 150 / this.speed, // 0.15초 / speed
                 progress: 0,
                 resolve: resolve
             };
@@ -80,7 +86,7 @@ class Animator {
                 type: 'move',
                 cells: moveData,
                 startTime: performance.now(),
-                duration: 200, // 0.2초
+                duration: 200 / this.speed, // 0.2초 / speed
                 progress: 0,
                 resolve: resolve
             };
@@ -101,7 +107,7 @@ class Animator {
                 type: 'spawn',
                 cells: cells,
                 startTime: performance.now(),
-                duration: 150, // 0.15초
+                duration: 150 / this.speed, // 0.15초 / speed
                 progress: 0,
                 resolve: resolve
             };
@@ -120,7 +126,7 @@ class Animator {
                 y: y,
                 score: score,
                 startTime: performance.now(),
-                duration: 300, // 0.3초
+                duration: 300 / this.speed, // 0.3초 / speed
                 progress: 0,
                 resolve: resolve
             };
