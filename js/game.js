@@ -18,7 +18,8 @@ class Game {
         this.config = {
             blockCount: 1,
             bombChance: 5,
-            bombRange: 2
+            bombRange: 2,
+            boardSize: 8
         };
 
         // UI 이벤트 연결
@@ -34,7 +35,18 @@ class Game {
 
     applyDebugConfig() {
         const newConfig = this.ui.getDebugConfig();
+        const oldBoardSize = this.config.boardSize;
         Object.assign(this.config, newConfig);
+
+        // 보드 크기 변경 시 전역 변수 업데이트 및 재시작
+        if (this.config.boardSize !== oldBoardSize) {
+            BOARD_SIZE = this.config.boardSize;
+            this.renderer.resize();
+            if (this.state !== 'waiting') {
+                this.init();
+            }
+        }
+
         this.ui.hideDebug();
         alert('설정이 적용되었습니다.');
     }
@@ -180,22 +192,24 @@ class Game {
     // 최적 생성 위치 찾기 (빈 공간 중앙 선호, 기존 블록+보드 끝에서 멀게)
     findBestSpawnPosition(shape) {
         const candidates = [];
+        const size = this.board.size;
+        const center = (size - 1) / 2;
 
         // 보드 전체 스캔
-        for (let y = 0; y < 8; y++) {
-            for (let x = 0; x < 8; x++) {
+        for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
                 if (!this.board.canPlace(shape, y, x)) continue;
 
                 let score = 0;
 
                 // 보드 중앙에 가까울수록 높은 점수
-                const centerDist = Math.abs(y - 3.5) + Math.abs(x - 3.5);
-                score += (7 - centerDist) * 10;
+                const centerDist = Math.abs(y - center) + Math.abs(x - center);
+                score += (size * 2 - 1 - centerDist) * 10;
 
                 // 기존 블록과 거리 계산 (멀수록 높은 점수)
                 let minBlockDist = 99;
-                for (let by = 0; by < 8; by++) {
-                    for (let bx = 0; bx < 8; bx++) {
+                for (let by = 0; by < size; by++) {
+                    for (let bx = 0; bx < size; bx++) {
                         if (!this.board.isEmpty(by, bx)) {
                             const dist = Math.abs(by - y) + Math.abs(bx - x);
                             minBlockDist = Math.min(minBlockDist, dist);

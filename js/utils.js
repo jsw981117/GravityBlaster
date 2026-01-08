@@ -1,3 +1,6 @@
+// 보드 크기 (동적 설정 가능)
+let BOARD_SIZE = 8;
+
 // 블록 형태 정의 (2~5칸)
 const BLOCK_SHAPES = {
     '1x2': [[0, 0], [0, 1]],
@@ -48,7 +51,7 @@ function deepCopy(arr) {
 
 // 좌표가 보드 내부인지 체크
 function isInBounds(y, x) {
-    return y >= 0 && y < 8 && x >= 0 && x < 8;
+    return y >= 0 && y < BOARD_SIZE && x >= 0 && x < BOARD_SIZE;
 }
 
 // 두 좌표가 인접한지 체크 (상하좌우)

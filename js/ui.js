@@ -117,7 +117,8 @@ class UI {
         return {
             blockCount: parseInt(document.getElementById('block-count').value),
             bombChance: parseInt(document.getElementById('bomb-chance').value),
-            bombRange: parseInt(document.getElementById('bomb-range').value)
+            bombRange: parseInt(document.getElementById('bomb-range').value),
+            boardSize: parseInt(document.getElementById('board-size').value)
         };
     }
 
@@ -125,6 +126,7 @@ class UI {
         document.getElementById('block-count').value = config.blockCount;
         document.getElementById('bomb-chance').value = config.bombChance;
         document.getElementById('bomb-range').value = config.bombRange;
+        document.getElementById('board-size').value = config.boardSize;
     }
 
     updateScore(score) {

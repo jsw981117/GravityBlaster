@@ -1,6 +1,7 @@
 class Board {
     constructor() {
-        this.grid = Array(8).fill(null).map(() => Array(8).fill(null));
+        this.size = BOARD_SIZE;
+        this.grid = Array(this.size).fill(null).map(() => Array(this.size).fill(null));
         this.blocks = []; // Block 객체 배열
     }
 
@@ -13,7 +14,7 @@ class Board {
     // 그리드 업데이트 (블록 정보 반영)
     updateGrid() {
         // 그리드 초기화
-        this.grid = Array(8).fill(null).map(() => Array(8).fill(null));
+        this.grid = Array(this.size).fill(null).map(() => Array(this.size).fill(null));
 
         // 모든 블록을 그리드에 반영
         for (let block of this.blocks) {
@@ -84,7 +85,7 @@ class Board {
         for (let [dy, dx] of shape) {
             const y = startY + dy;
             const x = startX + dx;
-            if (y === 0 || y === 7 || x === 0 || x === 7) {
+            if (y === 0 || y === this.size - 1 || x === 0 || x === this.size - 1) {
                 return true;
             }
         }
@@ -93,11 +94,11 @@ class Board {
 
     // 매치-3 찾기 (같은 색 3개 이상 인접)
     findMatches() {
-        const visited = Array(8).fill(null).map(() => Array(8).fill(false));
+        const visited = Array(this.size).fill(null).map(() => Array(this.size).fill(false));
         const matches = [];
 
-        for (let y = 0; y < 8; y++) {
-            for (let x = 0; x < 8; x++) {
+        for (let y = 0; y < this.size; y++) {
+            for (let x = 0; x < this.size; x++) {
                 if (visited[y][x] || !this.grid[y][x] || this.grid[y][x].isBomb) continue;
 
                 const color = this.grid[y][x].color;
@@ -242,7 +243,7 @@ class Board {
 
     // 보드 비우기
     clear() {
-        this.grid = Array(8).fill(null).map(() => Array(8).fill(null));
+        this.grid = Array(this.size).fill(null).map(() => Array(this.size).fill(null));
         this.blocks = [];
     }
 }
