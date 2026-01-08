@@ -200,8 +200,8 @@ class Game {
         }
         this.board.updateGrid();
 
-        // 블록 분해
-        this.gravity.splitNormalBlocks();
+        // 블록 분해 (모든 블록 → 1x1)
+        this.gravity.splitBlocks();
 
         // 중력 적용
         this.gravity.apply(direction);

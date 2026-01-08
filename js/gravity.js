@@ -4,7 +4,7 @@ class Gravity {
         this.direction = null; // 'up' | 'down' | 'left' | 'right'
     }
 
-    // 중력 적용 (splitNormalBlocks는 호출자가 먼저 실행해야 함)
+    // 중력 적용 (splitBlocks는 호출자가 먼저 실행해야 함)
     apply(direction) {
         this.direction = direction;
 
@@ -13,28 +13,13 @@ class Gravity {
         do {
             moved = false;
 
-            // 일반 블록 이동 (1x1 개별 이동)
-            const normalBlocks = this.board.blocks.filter(b => b.type === 'normal');
-            for (let block of normalBlocks) {
+            // 모든 블록 개별 이동 (1x1)
+            for (let block of this.board.blocks) {
                 const [y, x] = block.shape[0];
                 const [ny, nx] = this.getNextPosition(y, x, direction);
 
                 if (this.canMove(y, x, ny, nx, block.id)) {
                     block.shape[0] = [ny, nx];
-                    moved = true;
-                }
-            }
-
-            // 강철 블록 이동 (형태 유지)
-            const steelBlocks = this.board.blocks.filter(b => b.type === 'steel');
-            for (let block of steelBlocks) {
-                if (this.canMoveBlock(block, direction)) {
-                    // 블록 전체를 이동
-                    for (let i = 0; i < block.shape.length; i++) {
-                        const [y, x] = block.shape[i];
-                        const [ny, nx] = this.getNextPosition(y, x, direction);
-                        block.shape[i] = [ny, nx];
-                    }
                     moved = true;
                 }
             }
@@ -45,7 +30,7 @@ class Gravity {
         } while (moved);
     }
 
-    // 블록 전체가 이동 가능한지 체크 (강철 블록용)
+    // 블록 전체가 이동 가능한지 체크 (사용 안 함, 호환성 유지)
     canMoveBlock(block, direction) {
         // 모든 칸이 이동 가능해야 함
         for (let [y, x] of block.shape) {
@@ -57,15 +42,15 @@ class Gravity {
         return true;
     }
 
-    // 일반 블록을 1x1로 분해
-    splitNormalBlocks() {
+    // 모든 블록을 1x1로 분해
+    splitBlocks() {
         const newBlocks = [];
 
         for (let block of this.board.blocks) {
-            if (block.type === 'normal' && block.shape.length > 1) {
+            if (block.shape.length > 1) {
                 // 각 칸을 별도 블록으로 분리
                 for (let [y, x] of block.shape) {
-                    const newBlock = new Block('normal', [[0, 0]], y, x);
+                    const newBlock = new Block(block.color, [[0, 0]], y, x, block.isBomb);
                     newBlock.shape = [[y, x]]; // 절대 좌표로 직접 설정
                     newBlocks.push(newBlock);
                 }
