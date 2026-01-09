@@ -2,11 +2,14 @@ class Game {
     constructor() {
         this.board = new Board();
         this.gravity = new Gravity(this.board);
-        this.renderer = new Renderer(document.getElementById('game-canvas'));
+        this.renderer = new Renderer(
+            document.getElementById('game-canvas'),
+            document.getElementById('preview-canvas')
+        );
         this.animator = new Animator(this.renderer);
         this.ui = new UI();
         this.inputHandler = new InputHandler(
-            document.getElementById('game-canvas'),
+            document.getElementById('game-container'),
             (dir) => this.onSwipe(dir),
             () => this.togglePause()
         );
@@ -18,6 +21,9 @@ class Game {
         // 게임 오버 조건 2 추적 변수
         this.thresholdExceeded = false;
         this.turnsAfterThreshold = 0;
+
+        // 미리보기 블록 (shape, colors만 저장, 위치는 나중)
+        this.previewBlocks = [];
 
         // 디버그 설정
         this.config = {
@@ -87,6 +93,9 @@ class Game {
         this.thresholdExceeded = false;
         this.turnsAfterThreshold = 0;
 
+        // 첫 미리보기 생성
+        this.previewBlocks = this.generateNextBlocks();
+
         // 첫 블록 생성
         const spawnData = this.spawnBlocksWithData();
         if (!spawnData) {
@@ -128,13 +137,14 @@ class Game {
         return true;
     }
 
-    // 블록 생성 + 애니메이션 데이터 반환
+    // 블록 생성 + 애니메이션 데이터 반환 (미리보기 소비)
     spawnBlocksWithData() {
-        const count = this.config.blockCount;
         const spawnData = [];
 
-        for (let i = 0; i < count; i++) {
-            const shape = getRandomShape(this.config.minCells, this.config.maxCells);
+        for (let i = 0; i < this.previewBlocks.length; i++) {
+            const preview = this.previewBlocks[i];
+            const shape = preview.shape;
+            const colors = preview.colors;
 
             // 최적 생성 위치 찾기
             const position = this.findBestSpawnPosition(shape);
@@ -142,9 +152,6 @@ class Game {
             if (!position) {
                 return null; // 게임 오버
             }
-
-            // 각 셀에 색상 할당 (셀별 폭탄 확률, 같은 색 최대 2개)
-            const colors = this.assignBlockColors(shape.length, position.y, position.x, shape);
 
             // 블록 생성
             const block = new Block(colors, shape, position.y, position.x);
@@ -161,7 +168,36 @@ class Game {
             }
         }
 
+        // 미리보기 소비 후 새로 생성
+        this.previewBlocks = this.generateNextBlocks();
+
         return spawnData;
+    }
+
+    // 다음 블록 미리보기 생성 (shape, colors만)
+    generateNextBlocks() {
+        const count = this.config.blockCount;
+        const blocks = [];
+
+        for (let i = 0; i < count; i++) {
+            const shape = getRandomShape(this.config.minCells, this.config.maxCells);
+            const colors = [];
+            const cellCount = shape.length;
+
+            // 각 셀에 색상 할당
+            for (let j = 0; j < cellCount; j++) {
+                if (Math.random() * 100 < this.config.bombChance) {
+                    colors.push(BOMB_COLOR);
+                } else {
+                    const availableColors = Object.values(GAME_COLORS);
+                    colors.push(availableColors[Math.floor(Math.random() * availableColors.length)]);
+                }
+            }
+
+            blocks.push({ shape, colors });
+        }
+
+        return blocks;
     }
 
     // 블록 각 셀에 색상 할당 (셀별 폭탄 확률, 같은 색 최대 2개)
@@ -306,30 +342,46 @@ class Game {
         };
     }
 
-    // 최적 생성 위치 찾기 (가장 큰 빈 영역 중심 우선, 격리 필수)
+    // 최적 생성 위치 찾기 (가장 큰 빈 영역 중심 우선, 격리 우선)
     findBestSpawnPosition(shape) {
         const regions = this.findEmptyRegions();
 
         // 크기 순 정렬
         regions.sort((a, b) => b.cells.length - a.cells.length);
 
-        // 가장 큰 영역부터 시도
+        // 1단계: 격리된 위치 우선 탐색
         for (let region of regions) {
             const candidates = [];
 
-            // 격리된 위치 찾기
             for (let y = 0; y < this.board.size; y++) {
                 for (let x = 0; x < this.board.size; x++) {
                     if (!this.board.canPlaceIsolated(shape, y, x)) continue;
 
-                    // 영역 중심과의 거리
                     const dist = Math.abs(y - region.center.y) + Math.abs(x - region.center.x);
                     candidates.push({ y, x, dist });
                 }
             }
 
             if (candidates.length > 0) {
-                // 중심에 가장 가까운 위치 선택
+                candidates.sort((a, b) => a.dist - b.dist);
+                return candidates[0];
+            }
+        }
+
+        // 2단계: 격리 불가 시 일반 배치 허용
+        for (let region of regions) {
+            const candidates = [];
+
+            for (let y = 0; y < this.board.size; y++) {
+                for (let x = 0; x < this.board.size; x++) {
+                    if (!this.board.canPlace(shape, y, x)) continue;
+
+                    const dist = Math.abs(y - region.center.y) + Math.abs(x - region.center.x);
+                    candidates.push({ y, x, dist });
+                }
+            }
+
+            if (candidates.length > 0) {
                 candidates.sort((a, b) => a.dist - b.dist);
                 return candidates[0];
             }
@@ -509,6 +561,7 @@ class Game {
     // 렌더링
     render() {
         this.renderer.renderBoard(this.board);
+        this.renderer.renderPreview(this.previewBlocks);
     }
 
     // 애니메이션 루프 시작

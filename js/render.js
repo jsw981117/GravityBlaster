@@ -1,7 +1,10 @@
 class Renderer {
-    constructor(canvas) {
+    constructor(canvas, previewCanvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
+
+        this.previewCanvas = previewCanvas;
+        this.previewCtx = previewCanvas ? previewCanvas.getContext('2d') : null;
 
         this.cellSize = 0;
         this.resize();
@@ -157,6 +160,72 @@ class Renderer {
             this.ctx.strokeText(`+${popup.score}`, px, py);
             this.ctx.fillText(`+${popup.score}`, px, py);
             this.ctx.restore();
+        }
+    }
+
+    // 미리보기 블록 렌더링
+    renderPreview(previewBlocks) {
+        if (!this.previewCtx || previewBlocks.length === 0) return;
+
+        // 캔버스 크기 설정
+        const cellSize = 20; // 작은 셀 크기
+        const padding = 10;
+        const blockSpacing = 30;
+
+        // 전체 폭 계산
+        let totalWidth = padding;
+        for (let block of previewBlocks) {
+            const maxX = Math.max(...block.shape.map(([dy, dx]) => dx));
+            const minX = Math.min(...block.shape.map(([dy, dx]) => dx));
+            totalWidth += (maxX - minX + 1) * cellSize + blockSpacing;
+        }
+        totalWidth += padding;
+
+        // 높이 계산
+        let maxHeight = 0;
+        for (let block of previewBlocks) {
+            const maxY = Math.max(...block.shape.map(([dy, dx]) => dy));
+            const minY = Math.min(...block.shape.map(([dy, dx]) => dy));
+            maxHeight = Math.max(maxHeight, (maxY - minY + 1) * cellSize);
+        }
+
+        this.previewCanvas.width = totalWidth;
+        this.previewCanvas.height = maxHeight + padding * 2;
+
+        // 배경
+        this.previewCtx.fillStyle = '#1a1a1a';
+        this.previewCtx.fillRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+
+        // 각 블록 렌더링
+        let offsetX = padding;
+        for (let block of previewBlocks) {
+            const minX = Math.min(...block.shape.map(([dy, dx]) => dx));
+            const minY = Math.min(...block.shape.map(([dy, dx]) => dy));
+            const maxX = Math.max(...block.shape.map(([dy, dx]) => dx));
+
+            for (let i = 0; i < block.shape.length; i++) {
+                const [dy, dx] = block.shape[i];
+                const color = block.colors[i];
+                const isBomb = color === BOMB_COLOR;
+
+                const x = offsetX + (dx - minX) * cellSize;
+                const y = padding + (dy - minY) * cellSize;
+
+                // 셀 그리기
+                this.previewCtx.fillStyle = color;
+                this.previewCtx.fillRect(x, y, cellSize - 1, cellSize - 1);
+
+                // 폭탄 표시
+                if (isBomb) {
+                    this.previewCtx.fillStyle = '#fff';
+                    this.previewCtx.font = `${cellSize * 0.6}px Arial`;
+                    this.previewCtx.textAlign = 'center';
+                    this.previewCtx.textBaseline = 'middle';
+                    this.previewCtx.fillText('💣', x + cellSize / 2, y + cellSize / 2);
+                }
+            }
+
+            offsetX += (maxX - minX + 1) * cellSize + blockSpacing;
         }
     }
 }

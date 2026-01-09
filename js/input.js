@@ -1,6 +1,6 @@
 class InputHandler {
-    constructor(canvas, onSwipe, onPause) {
-        this.canvas = canvas;
+    constructor(element, onSwipe, onPause) {
+        this.element = element;
         this.onSwipe = onSwipe;
         this.onPause = onPause;
         this.startX = 0;
@@ -12,14 +12,14 @@ class InputHandler {
 
     setupEvents() {
         // 터치 이벤트
-        this.canvas.addEventListener('touchstart', (e) => {
+        this.element.addEventListener('touchstart', (e) => {
             e.preventDefault();
             const touch = e.touches[0];
             this.startX = touch.clientX;
             this.startY = touch.clientY;
         });
 
-        this.canvas.addEventListener('touchend', (e) => {
+        this.element.addEventListener('touchend', (e) => {
             e.preventDefault();
             const touch = e.changedTouches[0];
             const endX = touch.clientX;
@@ -28,12 +28,12 @@ class InputHandler {
         });
 
         // 마우스 이벤트
-        this.canvas.addEventListener('mousedown', (e) => {
+        this.element.addEventListener('mousedown', (e) => {
             this.startX = e.clientX;
             this.startY = e.clientY;
         });
 
-        this.canvas.addEventListener('mouseup', (e) => {
+        this.element.addEventListener('mouseup', (e) => {
             const endX = e.clientX;
             const endY = e.clientY;
             this.detectSwipe(endX, endY);
