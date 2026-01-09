@@ -119,7 +119,11 @@ class UI {
             bombChance: parseInt(document.getElementById('bomb-chance').value),
             bombRange: parseInt(document.getElementById('bomb-range').value),
             boardSize: parseInt(document.getElementById('board-size').value),
-            animationSpeed: parseFloat(document.getElementById('animation-speed').value),
+            removeAnimDuration: parseInt(document.getElementById('remove-anim-duration').value),
+            moveAnimDuration: parseInt(document.getElementById('move-anim-duration').value),
+            spawnAnimDuration: parseInt(document.getElementById('spawn-anim-duration').value),
+            scoreAnimDuration: parseInt(document.getElementById('score-anim-duration').value),
+            scorePopupDistance: parseInt(document.getElementById('score-popup-distance').value),
             minCells: parseInt(document.getElementById('min-cells').value),
             maxCells: parseInt(document.getElementById('max-cells').value),
             gameOverMode: parseInt(document.getElementById('gameover-mode').value),
@@ -133,7 +137,11 @@ class UI {
         document.getElementById('bomb-chance').value = config.bombChance;
         document.getElementById('bomb-range').value = config.bombRange;
         document.getElementById('board-size').value = config.boardSize;
-        document.getElementById('animation-speed').value = config.animationSpeed;
+        document.getElementById('remove-anim-duration').value = config.removeAnimDuration;
+        document.getElementById('move-anim-duration').value = config.moveAnimDuration;
+        document.getElementById('spawn-anim-duration').value = config.spawnAnimDuration;
+        document.getElementById('score-anim-duration').value = config.scoreAnimDuration;
+        document.getElementById('score-popup-distance').value = config.scorePopupDistance;
         document.getElementById('min-cells').value = config.minCells;
         document.getElementById('max-cells').value = config.maxCells;
         document.getElementById('gameover-mode').value = config.gameOverMode;

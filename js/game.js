@@ -31,7 +31,11 @@ class Game {
             bombChance: 5,
             bombRange: 2,
             boardSize: 8,
-            animationSpeed: 1.0,
+            removeAnimDuration: 150,
+            moveAnimDuration: 200,
+            spawnAnimDuration: 150,
+            scoreAnimDuration: 300,
+            scorePopupDistance: 30,
             minCells: 2,
             maxCells: 5,
             gameOverMode: 1,
@@ -64,8 +68,14 @@ class Game {
             }
         }
 
-        // 애니메이션 속도 적용
-        this.animator.setSpeed(this.config.animationSpeed);
+        // 애니메이션 설정 적용
+        this.animator.setConfig({
+            removeAnimDuration: this.config.removeAnimDuration,
+            moveAnimDuration: this.config.moveAnimDuration,
+            spawnAnimDuration: this.config.spawnAnimDuration,
+            scoreAnimDuration: this.config.scoreAnimDuration,
+            scorePopupDistance: this.config.scorePopupDistance
+        });
 
         this.ui.hideDebug();
         alert('설정이 적용되었습니다.');

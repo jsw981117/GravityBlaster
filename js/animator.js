@@ -4,12 +4,22 @@ class Animator {
         this.activeAnimations = [];
         this.isRunning = false;
         this.animationFrameId = null;
-        this.speed = 1.0; // 속도 배율 (1.0 = 기본, 2.0 = 2배 빠름, 0.5 = 2배 느림)
+
+        // 개별 애니메이션 설정
+        this.removeAnimDuration = 150;
+        this.moveAnimDuration = 200;
+        this.spawnAnimDuration = 150;
+        this.scoreAnimDuration = 300;
+        this.scorePopupDistance = 30;
     }
 
-    // 애니메이션 속도 설정
-    setSpeed(speed) {
-        this.speed = Math.max(0.1, Math.min(5.0, speed)); // 0.1 ~ 5.0 범위
+    // 애니메이션 설정
+    setConfig(config) {
+        if (config.removeAnimDuration !== undefined) this.removeAnimDuration = config.removeAnimDuration;
+        if (config.moveAnimDuration !== undefined) this.moveAnimDuration = config.moveAnimDuration;
+        if (config.spawnAnimDuration !== undefined) this.spawnAnimDuration = config.spawnAnimDuration;
+        if (config.scoreAnimDuration !== undefined) this.scoreAnimDuration = config.scoreAnimDuration;
+        if (config.scorePopupDistance !== undefined) this.scorePopupDistance = config.scorePopupDistance;
     }
 
     // 애니메이션 루프 시작
@@ -65,7 +75,7 @@ class Animator {
                 type: 'remove',
                 cells: cells,
                 startTime: performance.now(),
-                duration: 150 / this.speed, // 0.15초 / speed
+                duration: this.removeAnimDuration,
                 progress: 0,
                 resolve: resolve
             };
@@ -86,7 +96,7 @@ class Animator {
                 type: 'move',
                 cells: moveData,
                 startTime: performance.now(),
-                duration: 200 / this.speed, // 0.2초 / speed
+                duration: this.moveAnimDuration,
                 progress: 0,
                 resolve: resolve
             };
@@ -107,7 +117,7 @@ class Animator {
                 type: 'spawn',
                 cells: cells,
                 startTime: performance.now(),
-                duration: 150 / this.speed, // 0.15초 / speed
+                duration: this.spawnAnimDuration,
                 progress: 0,
                 resolve: resolve
             };
@@ -126,7 +136,7 @@ class Animator {
                 y: y,
                 score: score,
                 startTime: performance.now(),
-                duration: 300 / this.speed, // 0.3초 / speed
+                duration: this.scoreAnimDuration,
                 progress: 0,
                 resolve: resolve
             };
@@ -186,7 +196,7 @@ class Animator {
 
                 case 'score':
                     // 위로 이동 + fade
-                    const offsetY = -30 * anim.progress; // 30px 위로
+                    const offsetY = -this.scorePopupDistance * anim.progress;
                     const alpha = 1.0 - anim.progress;
                     state.scorePopups.push({
                         x: anim.x,
