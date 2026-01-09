@@ -103,6 +103,34 @@
                 <input type="number" id="animation-speed" value="1.0" min="0.1" max="5.0" step="0.1">
             </div>
 
+            <div class="debug-item">
+                <label>블록 최소 셀 개수:</label>
+                <input type="number" id="min-cells" value="2" min="1" max="5">
+            </div>
+
+            <div class="debug-item">
+                <label>블록 최대 셀 개수:</label>
+                <input type="number" id="max-cells" value="5" min="1" max="5">
+            </div>
+
+            <div class="debug-item">
+                <label>게임 오버 조건:</label>
+                <select id="gameover-mode">
+                    <option value="1">조건1: 격리 배치 불가</option>
+                    <option value="2">조건2: 임계값+N턴</option>
+                </select>
+            </div>
+
+            <div class="debug-item">
+                <label>셀 개수 임계값 (%):</label>
+                <input type="number" id="cell-threshold" value="70" min="0" max="100">
+            </div>
+
+            <div class="debug-item">
+                <label>임계값 후 턴 수:</label>
+                <input type="number" id="turns-after-threshold" value="5" min="1" max="20">
+            </div>
+
             <button id="apply-debug-btn" class="menu-btn">적용</button>
             <button id="close-debug-btn" class="menu-btn">닫기</button>
         </div>

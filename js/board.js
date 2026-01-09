@@ -249,4 +249,17 @@ class Board {
         this.grid = Array(this.size).fill(null).map(() => Array(this.size).fill(null));
         this.blocks = [];
     }
+
+    // 보드 내 셀 개수 반환
+    getCellCount() {
+        let count = 0;
+        for (let y = 0; y < this.size; y++) {
+            for (let x = 0; x < this.size; x++) {
+                if (this.grid[y][x] !== null) {
+                    count++;
+                }
+            }
+        }
+        return count;
+    }
 }

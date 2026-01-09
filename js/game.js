@@ -15,13 +15,22 @@ class Game {
         this.paused = false;
         this.score = 0;
 
+        // 게임 오버 조건 2 추적 변수
+        this.thresholdExceeded = false;
+        this.turnsAfterThreshold = 0;
+
         // 디버그 설정
         this.config = {
             blockCount: 1,
             bombChance: 5,
             bombRange: 2,
             boardSize: 8,
-            animationSpeed: 1.0
+            animationSpeed: 1.0,
+            minCells: 2,
+            maxCells: 5,
+            gameOverMode: 1,
+            cellThreshold: 70,
+            turnsAfterThreshold: 5
         };
 
         // UI 이벤트 연결
@@ -74,6 +83,10 @@ class Game {
         this.paused = false;
         this.ui.updateScore(0);
 
+        // 게임 오버 조건 2 변수 초기화
+        this.thresholdExceeded = false;
+        this.turnsAfterThreshold = 0;
+
         // 첫 블록 생성
         const spawnData = this.spawnBlocksWithData();
         if (!spawnData) {
@@ -95,7 +108,7 @@ class Game {
         const count = this.config.blockCount;
 
         for (let i = 0; i < count; i++) {
-            const shape = getRandomShape();
+            const shape = getRandomShape(this.config.minCells, this.config.maxCells);
 
             // 최적 생성 위치 찾기
             const position = this.findBestSpawnPosition(shape);
@@ -121,7 +134,7 @@ class Game {
         const spawnData = [];
 
         for (let i = 0; i < count; i++) {
-            const shape = getRandomShape();
+            const shape = getRandomShape(this.config.minCells, this.config.maxCells);
 
             // 최적 생성 위치 찾기
             const position = this.findBestSpawnPosition(shape);
@@ -338,16 +351,44 @@ class Game {
             // 점수 계산
             this.addScore(matchInfo);
 
+            // 게임 오버 조건 체크 (조건 2: 임계값+N턴)
+            if (this.config.gameOverMode === 2) {
+                const cellCount = this.board.getCellCount();
+                const totalCells = this.board.size * this.board.size;
+                const percentage = (cellCount / totalCells) * 100;
+
+                if (percentage >= this.config.cellThreshold) {
+                    if (!this.thresholdExceeded) {
+                        this.thresholdExceeded = true;
+                        this.turnsAfterThreshold = 0;
+                    }
+                }
+
+                if (this.thresholdExceeded) {
+                    this.turnsAfterThreshold++;
+                    if (this.turnsAfterThreshold >= this.config.turnsAfterThreshold) {
+                        this.gameOver();
+                        return;
+                    }
+                }
+            }
+
             // 다음 블록 생성 + 애니메이션
             const spawnData = this.spawnBlocksWithData();
             if (!spawnData) {
-                this.gameOver();
-                return;
+                // 조건 1인 경우만 게임 오버
+                if (this.config.gameOverMode === 1) {
+                    this.gameOver();
+                    return;
+                }
+                // 조건 2인 경우 생성 실패해도 계속 진행
             }
 
-            this.startAnimationLoop();
-            await this.animator.playSpawn(spawnData);
-            this.stopAnimationLoop();
+            if (spawnData) {
+                this.startAnimationLoop();
+                await this.animator.playSpawn(spawnData);
+                this.stopAnimationLoop();
+            }
 
             this.render();
         } catch (error) {

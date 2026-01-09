@@ -26,11 +26,19 @@ const GAME_COLORS = {
 // 폭탄 색상
 const BOMB_COLOR = '#555555';
 
-// 랜덤 블록 형태 선택
-function getRandomShape() {
-    const keys = Object.keys(BLOCK_SHAPES);
-    const key = keys[Math.floor(Math.random() * keys.length)];
-    return BLOCK_SHAPES[key];
+// 랜덤 블록 형태 선택 (셀 개수 범위 필터링)
+function getRandomShape(minCells = 2, maxCells = 5) {
+    const validShapes = Object.entries(BLOCK_SHAPES).filter(([key, shape]) => {
+        const cellCount = shape.length;
+        return cellCount >= minCells && cellCount <= maxCells;
+    });
+
+    if (validShapes.length === 0) {
+        return BLOCK_SHAPES['1x2']; // 기본값
+    }
+
+    const randomIndex = Math.floor(Math.random() * validShapes.length);
+    return validShapes[randomIndex][1];
 }
 
 // 랜덤 색상 선택

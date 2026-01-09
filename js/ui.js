@@ -119,7 +119,12 @@ class UI {
             bombChance: parseInt(document.getElementById('bomb-chance').value),
             bombRange: parseInt(document.getElementById('bomb-range').value),
             boardSize: parseInt(document.getElementById('board-size').value),
-            animationSpeed: parseFloat(document.getElementById('animation-speed').value)
+            animationSpeed: parseFloat(document.getElementById('animation-speed').value),
+            minCells: parseInt(document.getElementById('min-cells').value),
+            maxCells: parseInt(document.getElementById('max-cells').value),
+            gameOverMode: parseInt(document.getElementById('gameover-mode').value),
+            cellThreshold: parseInt(document.getElementById('cell-threshold').value),
+            turnsAfterThreshold: parseInt(document.getElementById('turns-after-threshold').value)
         };
     }
 
@@ -129,6 +134,11 @@ class UI {
         document.getElementById('bomb-range').value = config.bombRange;
         document.getElementById('board-size').value = config.boardSize;
         document.getElementById('animation-speed').value = config.animationSpeed;
+        document.getElementById('min-cells').value = config.minCells;
+        document.getElementById('max-cells').value = config.maxCells;
+        document.getElementById('gameover-mode').value = config.gameOverMode;
+        document.getElementById('cell-threshold').value = config.cellThreshold;
+        document.getElementById('turns-after-threshold').value = config.turnsAfterThreshold;
     }
 
     updateScore(score) {
