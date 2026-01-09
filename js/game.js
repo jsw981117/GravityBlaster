@@ -475,11 +475,6 @@ class Game {
         if (this.animationLoopId) return;
 
         const loop = () => {
-            if (!this.animator.isPlaying()) {
-                this.render();
-                return;
-            }
-
             // 애니메이션 상태 가져오기
             const animState = this.animator.getAnimationState();
 
