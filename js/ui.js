@@ -13,8 +13,11 @@ class UI {
         this.settingsOverlay = document.getElementById('settings-overlay');
         this.debugOverlay = document.getElementById('debug-overlay');
 
+        this.showGridCheckbox = document.getElementById('show-grid');
+
         this.setupMenuEvents();
         this.setupSettingsEvents();
+        this.loadSettings();
     }
 
     setupMenuEvents() {
@@ -64,6 +67,12 @@ class UI {
         // 설정 버튼
         document.getElementById('settings-btn').onclick = () => {
             this.showSettings();
+        };
+
+        // 그리드 토글
+        this.showGridCheckbox.onchange = () => {
+            this.saveSettings();
+            if (this.onGridToggle) this.onGridToggle();
         };
 
         // 디버그 메뉴 버튼
@@ -183,5 +192,18 @@ class UI {
         } else {
             this.pauseOverlay.classList.add('hidden');
         }
+    }
+
+    loadSettings() {
+        const showGrid = localStorage.getItem('showGrid');
+        this.showGridCheckbox.checked = showGrid === 'true';
+    }
+
+    saveSettings() {
+        localStorage.setItem('showGrid', this.showGridCheckbox.checked);
+    }
+
+    getShowGrid() {
+        return this.showGridCheckbox.checked;
     }
 }

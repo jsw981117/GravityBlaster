@@ -46,9 +46,14 @@ class Game {
         // UI 이벤트 연결
         this.ui.onStartGame = () => this.startGame();
         this.ui.onApplyDebug = () => this.applyDebugConfig();
+        this.ui.onGridToggle = () => {
+            this.renderer.setShowGrid(this.ui.getShowGrid());
+            this.render();
+        };
 
         // 설정 초기화
         this.ui.setDebugConfig(this.config);
+        this.renderer.setShowGrid(this.ui.getShowGrid());
 
         // 메인화면 표시
         this.ui.showMainMenu();

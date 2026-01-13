@@ -7,7 +7,12 @@ class Renderer {
         this.previewCtx = previewCanvas ? previewCanvas.getContext('2d') : null;
 
         this.cellSize = 0;
+        this.showGrid = false; // 기본값: 그리드 숨김
         this.resize();
+    }
+
+    setShowGrid(showGrid) {
+        this.showGrid = showGrid;
     }
 
     resize() {
@@ -21,8 +26,10 @@ class Renderer {
     renderBoard(board) {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // 그리드 라인
-        this.drawGrid();
+        // 그리드 라인 (설정에 따라)
+        if (this.showGrid) {
+            this.drawGrid();
+        }
 
         // 블록 렌더링
         for (let y = 0; y < board.size; y++) {
@@ -146,8 +153,10 @@ class Renderer {
     renderWithAnimation(board, animState) {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // 그리드 라인
-        this.drawGrid();
+        // 그리드 라인 (설정에 따라)
+        if (this.showGrid) {
+            this.drawGrid();
+        }
 
         // 제거 중인 셀 ID 수집
         const removingIds = new Set();
@@ -248,7 +257,7 @@ class Renderer {
         this.previewCanvas.height = maxHeight + padding * 2;
 
         // 배경
-        this.previewCtx.fillStyle = '#1a1a1a';
+        this.previewCtx.fillStyle = '#fafafa';
         this.previewCtx.fillRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
 
         // 각 블록 렌더링
