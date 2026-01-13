@@ -54,23 +54,56 @@ class Renderer {
         }
     }
 
-    // 셀 그리기
-    drawCell(x, y, color, isBomb = false, scale = 1.0) {
+    // 셀 그리기 (젤리 스타일)
+    drawCell(x, y, color, isBomb = false, scale = 1.0, scaleX = 1.0, scaleY = 1.0) {
         const px = x * this.cellSize;
         const py = y * this.cellSize;
         const padding = 2;
 
         const centerX = px + this.cellSize / 2;
         const centerY = py + this.cellSize / 2;
-        const size = (this.cellSize - padding * 2) * scale;
+        const baseSize = (this.cellSize - padding * 2) * scale;
+        const width = baseSize * scaleX;
+        const height = baseSize * scaleY;
 
-        this.ctx.fillStyle = color;
-        this.ctx.fillRect(
-            centerX - size / 2,
-            centerY - size / 2,
-            size,
-            size
+        const x0 = centerX - width / 2;
+        const y0 = centerY - height / 2;
+        const cornerRadius = Math.min(width, height) * 0.2;
+
+        this.ctx.save();
+
+        // 둥근 모서리 사각형
+        this.ctx.beginPath();
+        this.ctx.moveTo(x0 + cornerRadius, y0);
+        this.ctx.lineTo(x0 + width - cornerRadius, y0);
+        this.ctx.quadraticCurveTo(x0 + width, y0, x0 + width, y0 + cornerRadius);
+        this.ctx.lineTo(x0 + width, y0 + height - cornerRadius);
+        this.ctx.quadraticCurveTo(x0 + width, y0 + height, x0 + width - cornerRadius, y0 + height);
+        this.ctx.lineTo(x0 + cornerRadius, y0 + height);
+        this.ctx.quadraticCurveTo(x0, y0 + height, x0, y0 + height - cornerRadius);
+        this.ctx.lineTo(x0, y0 + cornerRadius);
+        this.ctx.quadraticCurveTo(x0, y0, x0 + cornerRadius, y0);
+        this.ctx.closePath();
+
+        // 그라디언트 (위쪽 밝게, 아래 어둡게)
+        const gradient = this.ctx.createLinearGradient(centerX, y0, centerX, y0 + height);
+        gradient.addColorStop(0, this.lightenColor(color, 20));
+        gradient.addColorStop(1, this.darkenColor(color, 20));
+        this.ctx.fillStyle = gradient;
+        this.ctx.fill();
+
+        // 하이라이트 (왼쪽 위 반짝임)
+        const highlightSize = Math.min(width, height) * 0.3;
+        const highlightGradient = this.ctx.createRadialGradient(
+            x0 + width * 0.3, y0 + height * 0.3, 0,
+            x0 + width * 0.3, y0 + height * 0.3, highlightSize
         );
+        highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+        highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        this.ctx.fillStyle = highlightGradient;
+        this.ctx.fill();
+
+        this.ctx.restore();
 
         // 폭탄 표시 (💣 이모지)
         if (isBomb) {
@@ -79,6 +112,26 @@ class Renderer {
             this.ctx.textBaseline = 'middle';
             this.ctx.fillText('💣', centerX, centerY);
         }
+    }
+
+    // 색상 밝게
+    lightenColor(color, percent) {
+        const num = parseInt(color.replace('#', ''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = Math.min(255, (num >> 16) + amt);
+        const G = Math.min(255, (num >> 8 & 0x00FF) + amt);
+        const B = Math.min(255, (num & 0x0000FF) + amt);
+        return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+    }
+
+    // 색상 어둡게
+    darkenColor(color, percent) {
+        const num = parseInt(color.replace('#', ''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = Math.max(0, (num >> 16) - amt);
+        const G = Math.max(0, (num >> 8 & 0x00FF) - amt);
+        const B = Math.max(0, (num & 0x0000FF) - amt);
+        return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
     }
 
     // 스케일된 셀들 렌더링 (제거 애니메이션용)
@@ -129,9 +182,11 @@ class Renderer {
             }
         }
 
-        // 이동 중인 셀 렌더링
+        // 이동 중인 셀 렌더링 (squash & stretch 적용)
         for (let cell of animState.movingCells) {
-            this.drawCell(cell.x, cell.y, cell.color, cell.color === BOMB_COLOR);
+            const scaleX = cell.scaleX !== undefined ? cell.scaleX : 1.0;
+            const scaleY = cell.scaleY !== undefined ? cell.scaleY : 1.0;
+            this.drawCell(cell.x, cell.y, cell.color, cell.color === BOMB_COLOR, 1.0, scaleX, scaleY);
         }
 
         // 제거 중인 셀 렌더링 (축소)
