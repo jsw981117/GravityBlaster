@@ -44,7 +44,7 @@ class Renderer {
 
     // 그리드 라인
     drawGrid() {
-        this.ctx.strokeStyle = '#333';
+        this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.25)';
         this.ctx.lineWidth = 1;
 
         for (let i = 0; i <= BOARD_SIZE; i++) {
@@ -256,9 +256,8 @@ class Renderer {
         this.previewCanvas.width = totalWidth;
         this.previewCanvas.height = maxHeight + padding * 2;
 
-        // 배경
-        this.previewCtx.fillStyle = '#fafafa';
-        this.previewCtx.fillRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+        // 배경 투명 (배경 그리지 않음)
+        this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
 
         // 각 블록 렌더링
         let offsetX = padding;
