@@ -168,11 +168,14 @@ class UI {
 
     updateTurns(turns) {
         const turnsEl = document.getElementById('turns');
+        if (!turnsEl) return;
         turnsEl.textContent = `Turns: ${turns}`;
     }
 
     renderTargets(targets, removedCells = {}) {
         const targetList = document.getElementById('target-list');
+        if (!targetList) return;
+
         targetList.innerHTML = '';
 
         for (let color in targets) {

@@ -155,10 +155,12 @@ class Game {
     generateTargets() {
         this.targets = {};
         const colors = Object.values(GAME_COLORS);
-        let remaining = this.currentTargetCount;
+        if (colors.length === 0) return;
+
+        let remaining = Math.max(1, this.currentTargetCount);
 
         // 최소 1개씩 색상 할당 (최대 4색)
-        const numColors = Math.min(colors.length, remaining);
+        const numColors = Math.min(Math.max(1, colors.length), remaining);
         const selectedColors = [];
         for (let i = 0; i < numColors; i++) {
             selectedColors.push(colors[i]);
@@ -167,7 +169,7 @@ class Game {
         }
 
         // 나머지 랜덤 배분
-        while (remaining > 0) {
+        while (remaining > 0 && selectedColors.length > 0) {
             const color = selectedColors[Math.floor(Math.random() * selectedColors.length)];
             this.targets[color]++;
             remaining--;
