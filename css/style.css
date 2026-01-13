@@ -80,7 +80,7 @@ body {
 #game-canvas {
     width: 100%;
     aspect-ratio: 1;
-    background: #fafafa;
+    background: transparent;
     border: 3px solid #fff;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
