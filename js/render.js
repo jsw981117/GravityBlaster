@@ -242,47 +242,45 @@ class Renderer {
         }
     }
 
-    // 미리보기 블록 렌더링 (고정 크기, 정규화)
+    // 미리보기 블록 렌더링 (고정 셀 크기 20px)
     renderPreview(previewBlocks) {
         if (!this.previewCtx || previewBlocks.length === 0) return;
 
-        // 고정 크기 설정
-        const boxSize = 80; // 블록이 들어갈 고정 박스 크기
+        // 고정 셀 크기
+        const cellSize = 20;
         const padding = 10;
-        const blockSpacing = 10;
+        const blockSpacing = 15;
 
-        const boxCount = previewBlocks.length;
-        const canvasWidth = boxCount * (boxSize + blockSpacing) + padding * 2 - blockSpacing;
-        const canvasHeight = boxSize + padding * 2;
+        // 전체 크기 계산
+        let totalWidth = padding;
+        let maxHeight = 0;
 
-        this.previewCanvas.width = canvasWidth;
-        this.previewCanvas.height = canvasHeight;
-
-        // 배경
-        this.previewCtx.fillStyle = `rgba(255, 255, 255, ${this.previewBgAlpha})`;
-        this.previewCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-        // 각 블록 렌더링
-        let offsetX = padding;
         for (let block of previewBlocks) {
             const minX = Math.min(...block.shape.map(([dy, dx]) => dx));
             const minY = Math.min(...block.shape.map(([dy, dx]) => dy));
             const maxX = Math.max(...block.shape.map(([dy, dx]) => dx));
             const maxY = Math.max(...block.shape.map(([dy, dx]) => dy));
 
-            // 블록 실제 크기 계산
-            const blockWidth = maxX - minX + 1;
-            const blockHeight = maxY - minY + 1;
-            const blockSize = Math.max(blockWidth, blockHeight);
+            const blockWidth = (maxX - minX + 1) * cellSize;
+            const blockHeight = (maxY - minY + 1) * cellSize;
 
-            // 블록이 박스에 맞도록 cellSize 계산
-            const cellSize = Math.floor(boxSize / blockSize);
+            totalWidth += blockWidth + blockSpacing;
+            maxHeight = Math.max(maxHeight, blockHeight);
+        }
+        totalWidth += padding - blockSpacing;
 
-            // 블록을 박스 중앙에 배치
-            const blockPixelWidth = blockWidth * cellSize;
-            const blockPixelHeight = blockHeight * cellSize;
-            const startX = offsetX + (boxSize - blockPixelWidth) / 2;
-            const startY = padding + (boxSize - blockPixelHeight) / 2;
+        this.previewCanvas.width = totalWidth;
+        this.previewCanvas.height = maxHeight + padding * 2;
+
+        // 배경
+        this.previewCtx.fillStyle = `rgba(255, 255, 255, ${this.previewBgAlpha})`;
+        this.previewCtx.fillRect(0, 0, totalWidth, this.previewCanvas.height);
+
+        // 각 블록 렌더링
+        let offsetX = padding;
+        for (let block of previewBlocks) {
+            const minX = Math.min(...block.shape.map(([dy, dx]) => dx));
+            const minY = Math.min(...block.shape.map(([dy, dx]) => dy));
 
             // 블록 셀 렌더링
             for (let i = 0; i < block.shape.length; i++) {
@@ -290,8 +288,8 @@ class Renderer {
                 const color = block.colors[i];
                 const isBomb = color === BOMB_COLOR;
 
-                const x = startX + (dx - minX) * cellSize;
-                const y = startY + (dy - minY) * cellSize;
+                const x = offsetX + (dx - minX) * cellSize;
+                const y = padding + (dy - minY) * cellSize;
 
                 // 셀 그리기
                 this.previewCtx.fillStyle = color;
@@ -307,7 +305,9 @@ class Renderer {
                 }
             }
 
-            offsetX += boxSize + blockSpacing;
+            const maxX = Math.max(...block.shape.map(([dy, dx]) => dx));
+            const blockWidth = (maxX - minX + 1) * cellSize;
+            offsetX += blockWidth + blockSpacing;
         }
     }
 }

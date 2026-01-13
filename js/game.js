@@ -22,6 +22,14 @@ class Game {
         this.thresholdExceeded = false;
         this.turnsAfterThreshold = 0;
 
+        // 타겟 시스템
+        this.targets = {}; // {color: count}
+        this.currentTargetCount = 2; // 현재 단계의 타겟 총 개수
+        this.removedCells = {}; // {color: count} - 제거된 셀 추적
+
+        // 턴 시스템
+        this.remainingTurns = 5;
+
         // 미리보기 블록 (shape, colors만 저장, 위치는 나중)
         this.previewBlocks = [];
 
@@ -38,7 +46,7 @@ class Game {
             scorePopupDistance: 30,
             minCells: 2,
             maxCells: 5,
-            gameOverMode: 1,
+            gameOverMode: 3,
             cellThreshold: 70,
             turnsAfterThreshold: 5,
             boardBgAlpha: 0.3,
@@ -115,6 +123,15 @@ class Game {
         this.thresholdExceeded = false;
         this.turnsAfterThreshold = 0;
 
+        // 타겟 시스템 초기화
+        this.currentTargetCount = 2;
+        this.generateTargets();
+        this.removedCells = {};
+
+        // 턴 시스템 초기화
+        this.remainingTurns = 5;
+        this.ui.updateTurns(this.remainingTurns);
+
         // 첫 미리보기 생성
         this.previewBlocks = this.generateNextBlocks();
 
@@ -132,6 +149,46 @@ class Game {
 
         this.state = 'waiting';
         this.render();
+    }
+
+    // 타겟 생성
+    generateTargets() {
+        this.targets = {};
+        const colors = Object.values(GAME_COLORS);
+        let remaining = this.currentTargetCount;
+
+        // 최소 1개씩 색상 할당 (최대 4색)
+        const numColors = Math.min(colors.length, remaining);
+        const selectedColors = [];
+        for (let i = 0; i < numColors; i++) {
+            selectedColors.push(colors[i]);
+            this.targets[colors[i]] = 1;
+            remaining--;
+        }
+
+        // 나머지 랜덤 배분
+        while (remaining > 0) {
+            const color = selectedColors[Math.floor(Math.random() * selectedColors.length)];
+            this.targets[color]++;
+            remaining--;
+        }
+
+        this.ui.renderTargets(this.targets);
+    }
+
+    // 타겟 완료 체크
+    checkTargetsCompleted() {
+        for (let color in this.targets) {
+            if ((this.removedCells[color] || 0) < this.targets[color]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // 타겟 진행 상황 업데이트
+    updateTargetProgress() {
+        this.ui.renderTargets(this.targets, this.removedCells);
     }
 
     // 블록 즉시 생성
@@ -425,6 +482,10 @@ class Game {
             // 점수 계산
             this.addScore(matchInfo);
 
+            // 턴 감소
+            this.remainingTurns--;
+            this.ui.updateTurns(this.remainingTurns);
+
             // 게임 오버 조건 체크 (조건 2: 임계값+N턴)
             if (this.config.gameOverMode === 2) {
                 const cellCount = this.board.getCellCount();
@@ -447,6 +508,23 @@ class Game {
                 }
             }
 
+            // 게임 오버 조건 체크 (조건 3: 타겟 기반)
+            if (this.config.gameOverMode === 3) {
+                // 타겟 완료 체크
+                if (this.checkTargetsCompleted()) {
+                    // 턴 +5, 타겟 개수 +1, 새 타겟 생성
+                    this.remainingTurns += 5;
+                    this.currentTargetCount = Math.min(10, this.currentTargetCount + 1);
+                    this.generateTargets();
+                    this.removedCells = {};
+                    this.ui.updateTurns(this.remainingTurns);
+                } else if (this.remainingTurns <= 0) {
+                    // 턴 0 + 타겟 미완료 = 게임 오버
+                    this.gameOver();
+                    return;
+                }
+            }
+
             // 다음 블록 생성 + 애니메이션
             const spawnData = this.spawnBlocksWithData();
             if (!spawnData) {
@@ -455,7 +533,7 @@ class Game {
                     this.gameOver();
                     return;
                 }
-                // 조건 2인 경우 생성 실패해도 계속 진행
+                // 조건 2,3인 경우 생성 실패해도 계속 진행
             }
 
             if (spawnData) {
@@ -510,6 +588,15 @@ class Game {
                 this.animator.playScorePopup(centerX, centerY, chainScore); // 병렬 실행
             }
 
+            // 제거된 셀 색상 추적 (타겟 시스템용)
+            if (this.config.gameOverMode === 3) {
+                for (let cell of removeCells) {
+                    if (cell.color !== BOMB_COLOR) {
+                        this.removedCells[cell.color] = (this.removedCells[cell.color] || 0) + 1;
+                    }
+                }
+            }
+
             // 매치 제거
             this.board.removeMatches(matches, this.config.bombRange);
             chain++;
@@ -519,6 +606,11 @@ class Game {
 
         // UI 업데이트
         this.ui.updateGravityIndicator(direction);
+
+        // 타겟 진행 상황 업데이트
+        if (this.config.gameOverMode === 3) {
+            this.updateTargetProgress();
+        }
 
         return totalMatches;
     }

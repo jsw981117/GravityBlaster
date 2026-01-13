@@ -37,6 +37,16 @@ body {
     gap: 10px;
 }
 
+#score, #turns {
+    font-size: 18px;
+    font-weight: bold;
+    flex: 1;
+}
+
+#turns {
+    text-align: center;
+}
+
 #settings-btn {
     background: transparent;
     border: 2px solid #fff;
@@ -48,34 +58,55 @@ body {
     height: 40px;
     padding: 0;
     transition: transform 0.1s;
+    flex-shrink: 0;
 }
 
 #settings-btn:active {
     transform: scale(0.95);
 }
 
-#score {
-    font-size: 24px;
-    font-weight: bold;
+#info-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    gap: 10px;
+    min-height: 100px;
 }
 
-#gravity-indicator {
-    width: 40px;
-    height: 40px;
-    border: 2px solid #fff;
-    border-radius: 50%;
+#target-container {
+    flex: 1;
     display: flex;
-    justify-content: center;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid #fff;
+    border-radius: 8px;
+    min-height: 80px;
+}
+
+#target-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
     align-items: center;
 }
 
-#gravity-arrow {
-    width: 0;
-    height: 0;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-top: 12px solid #fff;
-    transition: transform 0.3s;
+.target-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.target-color-box {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #000;
+    border-radius: 4px;
 }
 
 #game-canvas {
@@ -89,10 +120,10 @@ body {
 }
 
 #preview-container {
-    position: absolute;
-    top: 80px;
-    right: 20px;
-    z-index: 10;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
 }
 
 #preview-canvas {

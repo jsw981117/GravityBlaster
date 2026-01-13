@@ -166,6 +166,35 @@ class UI {
         this.scoreEl.textContent = `Score: ${score}`;
     }
 
+    updateTurns(turns) {
+        const turnsEl = document.getElementById('turns');
+        turnsEl.textContent = `Turns: ${turns}`;
+    }
+
+    renderTargets(targets, removedCells = {}) {
+        const targetList = document.getElementById('target-list');
+        targetList.innerHTML = '';
+
+        for (let color in targets) {
+            const targetCount = targets[color];
+            const removedCount = removedCells[color] || 0;
+
+            const item = document.createElement('div');
+            item.className = 'target-item';
+
+            const colorBox = document.createElement('div');
+            colorBox.className = 'target-color-box';
+            colorBox.style.backgroundColor = color;
+
+            const text = document.createElement('span');
+            text.textContent = `${removedCount} / ${targetCount}`;
+
+            item.appendChild(colorBox);
+            item.appendChild(text);
+            targetList.appendChild(item);
+        }
+    }
+
     updateGravityIndicator(direction) {
         if (!direction) return;
 

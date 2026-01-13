@@ -44,16 +44,20 @@
     <div id="game-container" class="hidden">
         <div id="ui-top">
             <div id="score">Score: 0</div>
+            <div id="turns">Turns: 5</div>
             <button id="settings-btn">⚙️</button>
-            <div id="gravity-indicator">
-                <div id="gravity-arrow"></div>
+        </div>
+
+        <div id="info-area">
+            <div id="target-container">
+                <div id="target-list"></div>
+            </div>
+            <div id="preview-container">
+                <canvas id="preview-canvas"></canvas>
             </div>
         </div>
 
         <canvas id="game-canvas"></canvas>
-        <div id="preview-container">
-            <canvas id="preview-canvas"></canvas>
-        </div>
     </div>
 
     <div id="game-over" class="hidden">
@@ -147,6 +151,7 @@
                 <select id="gameover-mode">
                     <option value="1">조건1: 격리 배치 불가</option>
                     <option value="2">조건2: 임계값+N턴</option>
+                    <option value="3" selected>조건3: 타겟 기반</option>
                 </select>
             </div>
 
