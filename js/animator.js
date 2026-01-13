@@ -167,14 +167,39 @@ class Animator {
                     break;
 
                 case 'move':
-                    // position lerp
-                    state.movingCells = anim.cells.map(cell => ({
-                        y: cell.fromY + (cell.toY - cell.fromY) * anim.progress,
-                        x: cell.fromX + (cell.toX - cell.fromX) * anim.progress,
-                        toY: cell.toY,
-                        toX: cell.toX,
-                        color: cell.color
-                    }));
+                    // position lerp + squash & stretch
+                    state.movingCells = anim.cells.map(cell => {
+                        const y = cell.fromY + (cell.toY - cell.fromY) * anim.progress;
+                        const x = cell.fromX + (cell.toX - cell.fromX) * anim.progress;
+
+                        // 착지 애니메이션 (마지막 20%에서 찌그러지고 튕김)
+                        let scaleX = 1.0;
+                        let scaleY = 1.0;
+                        if (anim.progress > 0.8) {
+                            const landProgress = (anim.progress - 0.8) / 0.2;
+                            if (landProgress < 0.5) {
+                                // 찌그러짐 (0.5까지)
+                                const t = landProgress / 0.5;
+                                scaleY = 1.0 - t * 0.3; // 0.7까지 감소
+                                scaleX = 1.0 + t * 0.3; // 1.3까지 증가
+                            } else {
+                                // 튕김 (0.5~1.0)
+                                const t = (landProgress - 0.5) / 0.5;
+                                scaleY = 0.7 + t * 0.3; // 0.7 → 1.0
+                                scaleX = 1.3 - t * 0.3; // 1.3 → 1.0
+                            }
+                        }
+
+                        return {
+                            y: y,
+                            x: x,
+                            toY: cell.toY,
+                            toX: cell.toX,
+                            color: cell.color,
+                            scaleX: scaleX,
+                            scaleY: scaleY
+                        };
+                    });
                     break;
 
                 case 'spawn':
