@@ -40,7 +40,9 @@ class Game {
             maxCells: 5,
             gameOverMode: 1,
             cellThreshold: 70,
-            turnsAfterThreshold: 5
+            turnsAfterThreshold: 5,
+            boardBgAlpha: 0.3,
+            previewBgAlpha: 0.3
         };
 
         // UI 이벤트 연결
@@ -54,6 +56,7 @@ class Game {
         // 설정 초기화
         this.ui.setDebugConfig(this.config);
         this.renderer.setShowGrid(this.ui.getShowGrid());
+        this.renderer.setBgAlpha(this.config.boardBgAlpha, this.config.previewBgAlpha);
 
         // 메인화면 표시
         this.ui.showMainMenu();
@@ -81,6 +84,10 @@ class Game {
             scoreAnimDuration: this.config.scoreAnimDuration,
             scorePopupDistance: this.config.scorePopupDistance
         });
+
+        // 배경 알파값 적용
+        this.renderer.setBgAlpha(this.config.boardBgAlpha, this.config.previewBgAlpha);
+        this.render();
 
         this.ui.hideDebug();
         alert('설정이 적용되었습니다.');

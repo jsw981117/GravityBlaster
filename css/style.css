@@ -25,6 +25,7 @@ body {
     display: flex;
     flex-direction: column;
     padding: 20px;
+    position: relative;
 }
 
 #ui-top {
@@ -87,21 +88,14 @@ body {
     touch-action: none;
 }
 
-#ui-bottom {
-    margin-top: 20px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-#next-label {
-    font-size: 18px;
-    font-weight: bold;
+#preview-container {
+    position: absolute;
+    top: 80px;
+    right: 20px;
+    z-index: 10;
 }
 
 #preview-canvas {
-    flex: 1;
-    height: 80px;
     background: transparent;
     border: 2px solid #fff;
     border-radius: 4px;

@@ -137,7 +137,9 @@ class UI {
             maxCells: parseInt(document.getElementById('max-cells').value),
             gameOverMode: parseInt(document.getElementById('gameover-mode').value),
             cellThreshold: parseInt(document.getElementById('cell-threshold').value),
-            turnsAfterThreshold: parseInt(document.getElementById('turns-after-threshold').value)
+            turnsAfterThreshold: parseInt(document.getElementById('turns-after-threshold').value),
+            boardBgAlpha: parseFloat(document.getElementById('board-bg-alpha').value),
+            previewBgAlpha: parseFloat(document.getElementById('preview-bg-alpha').value)
         };
     }
 
@@ -156,6 +158,8 @@ class UI {
         document.getElementById('gameover-mode').value = config.gameOverMode;
         document.getElementById('cell-threshold').value = config.cellThreshold;
         document.getElementById('turns-after-threshold').value = config.turnsAfterThreshold;
+        document.getElementById('board-bg-alpha').value = config.boardBgAlpha;
+        document.getElementById('preview-bg-alpha').value = config.previewBgAlpha;
     }
 
     updateScore(score) {
