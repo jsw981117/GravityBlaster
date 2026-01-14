@@ -169,12 +169,15 @@ class Board {
                 for (let [ny, nx] of neighbors) {
                     if (!isInBounds(ny, nx) || !this.grid[ny][nx]) continue;
                     if (this.grid[ny][nx].color === BOOM_COLOR) {
-                        // 폭탄 주변 8칸 제거
+                        // 봄 셀 주변 8칸 제거
                         const explosionCells = getNeighborsInRange(ny, nx, bombRange);
                         for (let [ey, ex] of explosionCells) {
                             toRemove.add(`${ey},${ex}`);
                         }
-                        toRemove.add(`${ny},${nx}`); // 폭탄 자체도 제거
+                        toRemove.add(`${ny},${nx}`); // 봄 셀 자체도 제거
+                    } else if (this.grid[ny][nx].color === TIME_COLOR) {
+                        // 타임 셀은 폭발 없이 자기 자신만 제거
+                        toRemove.add(`${ny},${nx}`);
                     }
                 }
             }
@@ -217,12 +220,15 @@ class Board {
                 for (let [ny, nx] of neighbors) {
                     if (!isInBounds(ny, nx) || !this.grid[ny][nx]) continue;
                     if (this.grid[ny][nx].color === BOOM_COLOR) {
-                        // 폭탄 주변 제거
+                        // 봄 셀 주변 제거
                         const explosionCells = getNeighborsInRange(ny, nx, bombRange);
                         for (let [ey, ex] of explosionCells) {
                             toRemove.add(`${ey},${ex}`);
                         }
-                        toRemove.add(`${ny},${nx}`); // 폭탄 자체도 제거
+                        toRemove.add(`${ny},${nx}`); // 봄 셀 자체도 제거
+                    } else if (this.grid[ny][nx].color === TIME_COLOR) {
+                        // 타임 셀은 폭발 없이 자기 자신만 제거
+                        toRemove.add(`${ny},${nx}`);
                     }
                 }
             }

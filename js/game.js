@@ -48,7 +48,7 @@ class Game {
             scoreAnimDuration: 300,
             scorePopupDistance: 30,
             minCells: 2,
-            maxCells: 5,
+            maxCells: 4,
             gameOverMode: 3,
             cellThreshold: 70,
             turnsAfterThreshold: 5,
@@ -295,10 +295,12 @@ class Game {
             const colors = [];
             const cellCount = shape.length;
 
-            // 각 셀에 색상 할당
+            // 각 셀에 색상 할당 (블록당 특수 셀 1개까지)
+            let specialCellCount = 0;
             for (let j = 0; j < cellCount; j++) {
-                if (Math.random() * 100 < this.config.specialCellChance) {
+                if (specialCellCount === 0 && Math.random() * 100 < this.config.specialCellChance) {
                     colors.push(this.getSpecialCellType());
+                    specialCellCount++;
                 } else {
                     const availableColors = Object.values(GAME_COLORS);
                     colors.push(availableColors[Math.floor(Math.random() * availableColors.length)]);
@@ -336,10 +338,12 @@ class Game {
         }
 
         // 각 셀에 색상 할당
+        let specialCellCount = 0;
         for (let i = 0; i < cellCount; i++) {
-            // 특수 셀 확률 체크
-            if (Math.random() * 100 < this.config.specialCellChance) {
+            // 특수 셀 확률 체크 (블록당 1개까지만)
+            if (specialCellCount === 0 && Math.random() * 100 < this.config.specialCellChance) {
                 colors.push(this.getSpecialCellType());
+                specialCellCount++;
                 continue;
             }
 

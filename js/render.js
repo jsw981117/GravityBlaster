@@ -80,6 +80,19 @@ class Renderer {
 
         const centerX = px + this.cellSize / 2;
         const centerY = py + this.cellSize / 2;
+
+        // 특수 셀은 아이콘만 렌더링
+        if (color === BOOM_COLOR || color === TIME_COLOR) {
+            const icon = (color === BOOM_COLOR) ? '💣' : '⏰';
+            this.ctx.save();
+            this.ctx.font = `${this.cellSize * 0.5 * scale}px Arial`;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText(icon, centerX, centerY);
+            this.ctx.restore();
+            return;
+        }
+
         const baseSize = (this.cellSize - padding * 2) * scale;
         const width = baseSize * scaleX;
         const height = baseSize * scaleY;
@@ -341,26 +354,17 @@ class Renderer {
                 const x = offsetX + (dx - minX) * cellSize;
                 const y = offsetY + (dy - minY) * cellSize;
 
-                // 셀 그리기
-                this.previewCtx.fillStyle = color;
-                this.previewCtx.fillRect(x, y, cellSize - 1, cellSize - 1);
-
-                // 특수 셀 아이콘
-                let icon = null;
-                if (color === BOOM_COLOR) {
-                    icon = '💣';
-                } else if (color === TIME_COLOR) {
-                    icon = '⏰';
-                } else if (color === BOOM_COLOR) {
-                    icon = '💣'; // 하위 호환성
-                }
-
-                if (icon) {
-                    this.previewCtx.fillStyle = '#fff';
+                // 특수 셀은 아이콘만 렌더링
+                if (color === BOOM_COLOR || color === TIME_COLOR) {
+                    const icon = (color === BOOM_COLOR) ? '💣' : '⏰';
                     this.previewCtx.font = `${cellSize * 0.6}px Arial`;
                     this.previewCtx.textAlign = 'center';
                     this.previewCtx.textBaseline = 'middle';
                     this.previewCtx.fillText(icon, x + cellSize / 2, y + cellSize / 2);
+                } else {
+                    // 일반 셀은 배경 + 색상
+                    this.previewCtx.fillStyle = color;
+                    this.previewCtx.fillRect(x, y, cellSize - 1, cellSize - 1);
                 }
             }
         }
