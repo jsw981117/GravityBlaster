@@ -211,12 +211,9 @@ class UI {
             const colorBox = document.createElement('div');
             colorBox.className = 'target-color-box';
             colorBox.style.backgroundColor = color;
-
-            const text = document.createElement('span');
-            text.textContent = `${remaining}`;
+            colorBox.textContent = `${remaining}`;
 
             item.appendChild(colorBox);
-            item.appendChild(text);
             targetList.appendChild(item);
         }
     }
