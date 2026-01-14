@@ -28,7 +28,7 @@ class Game {
         this.removedCells = {}; // {color: count} - 제거된 셀 추적
 
         // 턴 시스템
-        this.remainingTurns = 5;
+        this.remainingTurns = 10;
 
         // 미리보기 블록 (shape, colors만 저장, 위치는 나중)
         this.previewBlocks = [];
@@ -37,8 +37,8 @@ class Game {
         this.config = {
             blockCount: 1,
             bombChance: 5,
-            bombRange: 2,
-            boardSize: 8,
+            bombRange: 1,
+            boardSize: 6,
             removeAnimDuration: 150,
             moveAnimDuration: 200,
             spawnAnimDuration: 150,
@@ -49,6 +49,8 @@ class Game {
             gameOverMode: 3,
             cellThreshold: 70,
             turnsAfterThreshold: 5,
+            turnRecovery: 5,
+            targetTextSize: 16,
             boardBgAlpha: 0.3,
             previewBgAlpha: 0.3
         };
@@ -65,6 +67,7 @@ class Game {
         this.ui.setDebugConfig(this.config);
         this.renderer.setShowGrid(this.ui.getShowGrid());
         this.renderer.setBgAlpha(this.config.boardBgAlpha, this.config.previewBgAlpha);
+        this.ui.setTargetTextSize(this.config.targetTextSize);
 
         // 메인화면 표시
         this.ui.showMainMenu();
@@ -95,6 +98,10 @@ class Game {
 
         // 배경 알파값 적용
         this.renderer.setBgAlpha(this.config.boardBgAlpha, this.config.previewBgAlpha);
+
+        // 타겟 텍스트 크기 적용
+        this.ui.setTargetTextSize(this.config.targetTextSize);
+
         this.render();
 
         this.ui.hideDebug();
@@ -129,7 +136,7 @@ class Game {
         this.removedCells = {};
 
         // 턴 시스템 초기화
-        this.remainingTurns = 5;
+        this.remainingTurns = 10;
         this.ui.updateTurns(this.remainingTurns);
 
         // 첫 미리보기 생성
@@ -484,7 +491,36 @@ class Game {
             // 점수 계산
             this.addScore(matchInfo);
 
-            // 턴 감소
+            // 다음 블록 생성 + 애니메이션
+            const spawnData = this.spawnBlocksWithData();
+            if (!spawnData) {
+                // 조건 1인 경우만 게임 오버
+                if (this.config.gameOverMode === 1) {
+                    this.gameOver();
+                    return;
+                }
+                // 조건 2,3인 경우 생성 실패해도 계속 진행
+            }
+
+            if (spawnData) {
+                this.startAnimationLoop();
+                await this.animator.playSpawn(spawnData);
+                this.stopAnimationLoop();
+            }
+
+            // 타겟 완료 체크 (조건 3, 턴 감소 전)
+            if (this.config.gameOverMode === 3) {
+                if (this.checkTargetsCompleted()) {
+                    // 턴 회복, 타겟 개수 +1, 새 타겟 생성
+                    this.remainingTurns += this.config.turnRecovery;
+                    this.currentTargetCount = Math.min(10, this.currentTargetCount + 1);
+                    this.generateTargets();
+                    this.removedCells = {};
+                    this.ui.updateTurns(this.remainingTurns);
+                }
+            }
+
+            // 턴 감소 (모든 애니메이션 완료 후)
             this.remainingTurns--;
             this.ui.updateTurns(this.remainingTurns);
 
@@ -512,36 +548,11 @@ class Game {
 
             // 게임 오버 조건 체크 (조건 3: 타겟 기반)
             if (this.config.gameOverMode === 3) {
-                // 타겟 완료 체크
-                if (this.checkTargetsCompleted()) {
-                    // 턴 +5, 타겟 개수 +1, 새 타겟 생성
-                    this.remainingTurns += 5;
-                    this.currentTargetCount = Math.min(10, this.currentTargetCount + 1);
-                    this.generateTargets();
-                    this.removedCells = {};
-                    this.ui.updateTurns(this.remainingTurns);
-                } else if (this.remainingTurns <= 0) {
+                if (this.remainingTurns <= 0) {
                     // 턴 0 + 타겟 미완료 = 게임 오버
                     this.gameOver();
                     return;
                 }
-            }
-
-            // 다음 블록 생성 + 애니메이션
-            const spawnData = this.spawnBlocksWithData();
-            if (!spawnData) {
-                // 조건 1인 경우만 게임 오버
-                if (this.config.gameOverMode === 1) {
-                    this.gameOver();
-                    return;
-                }
-                // 조건 2,3인 경우 생성 실패해도 계속 진행
-            }
-
-            if (spawnData) {
-                this.startAnimationLoop();
-                await this.animator.playSpawn(spawnData);
-                this.stopAnimationLoop();
             }
 
             this.render();

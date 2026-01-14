@@ -14,6 +14,9 @@ class UI {
         this.debugOverlay = document.getElementById('debug-overlay');
 
         this.showGridCheckbox = document.getElementById('show-grid');
+        this.targetHeader = document.getElementById('target-header');
+
+        this.targetTextSize = 16; // 기본값
 
         this.setupMenuEvents();
         this.setupSettingsEvents();
@@ -139,7 +142,9 @@ class UI {
             cellThreshold: parseInt(document.getElementById('cell-threshold').value),
             turnsAfterThreshold: parseInt(document.getElementById('turns-after-threshold').value),
             boardBgAlpha: parseFloat(document.getElementById('board-bg-alpha').value),
-            previewBgAlpha: parseFloat(document.getElementById('preview-bg-alpha').value)
+            previewBgAlpha: parseFloat(document.getElementById('preview-bg-alpha').value),
+            turnRecovery: parseInt(document.getElementById('turn-recovery').value),
+            targetTextSize: parseInt(document.getElementById('target-text-size').value)
         };
     }
 
@@ -160,6 +165,8 @@ class UI {
         document.getElementById('turns-after-threshold').value = config.turnsAfterThreshold;
         document.getElementById('board-bg-alpha').value = config.boardBgAlpha;
         document.getElementById('preview-bg-alpha').value = config.previewBgAlpha;
+        document.getElementById('turn-recovery').value = config.turnRecovery;
+        document.getElementById('target-text-size').value = config.targetTextSize;
     }
 
     updateScore(score) {
@@ -172,15 +179,31 @@ class UI {
         turnsEl.textContent = `Turns: ${turns}`;
     }
 
+    setTargetTextSize(size) {
+        this.targetTextSize = size;
+        if (this.targetHeader) {
+            this.targetHeader.style.fontSize = `${size}px`;
+        }
+    }
+
     renderTargets(targets, removedCells = {}) {
         const targetList = document.getElementById('target-list');
         if (!targetList) return;
+
+        // 헤더 폰트 크기 적용
+        if (this.targetHeader) {
+            this.targetHeader.style.fontSize = `${this.targetTextSize}px`;
+        }
 
         targetList.innerHTML = '';
 
         for (let color in targets) {
             const targetCount = targets[color];
             const removedCount = removedCells[color] || 0;
+            const remaining = targetCount - removedCount;
+
+            // 남은 개수가 0이면 표시하지 않음
+            if (remaining <= 0) continue;
 
             const item = document.createElement('div');
             item.className = 'target-item';
@@ -190,7 +213,7 @@ class UI {
             colorBox.style.backgroundColor = color;
 
             const text = document.createElement('span');
-            text.textContent = `${removedCount} / ${targetCount}`;
+            text.textContent = `${remaining}`;
 
             item.appendChild(colorBox);
             item.appendChild(text);
