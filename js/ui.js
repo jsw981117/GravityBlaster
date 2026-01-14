@@ -199,7 +199,7 @@ class UI {
     }
 
     updateGravityIndicator(direction) {
-        if (!direction) return;
+        if (!direction || !this.gravityArrow) return;
 
         let rotation = 0;
         switch (direction) {
