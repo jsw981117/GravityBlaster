@@ -141,23 +141,6 @@ class Renderer {
         this.ctx.fill();
 
         this.ctx.restore();
-
-        // 특수 셀 아이콘
-        let icon = null;
-        if (color === BOOM_COLOR) {
-            icon = '💣';
-        } else if (color === TIME_COLOR) {
-            icon = '⏰';
-        } else if (isBomb) {
-            icon = '💣'; // 하위 호환성
-        }
-
-        if (icon) {
-            this.ctx.font = `${this.cellSize * 0.5 * scale}px Arial`;
-            this.ctx.textAlign = 'center';
-            this.ctx.textBaseline = 'middle';
-            this.ctx.fillText(icon, centerX, centerY);
-        }
     }
 
     // 색상 밝게
