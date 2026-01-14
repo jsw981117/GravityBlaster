@@ -45,8 +45,16 @@
 
     <div id="game-container" class="hidden">
         <div id="ui-top">
-            <div id="score">Score: 0</div>
-            <div id="turns">Turns: 10</div>
+            <div id="score-container">
+                <div class="ui-label">SCORE</div>
+                <div id="score-value">0</div>
+            </div>
+
+            <div id="turn-container">
+                <div class="ui-label">TURN</div>
+                <div id="turn-value">10</div>
+            </div>
+
             <button id="settings-btn">⚙️</button>
         </div>
 
@@ -146,6 +154,11 @@
             <div class="debug-item">
                 <label>폭발 이모지 배율:</label>
                 <input type="number" id="explosion-emoji-scale" value="2.0" min="1.0" max="5.0" step="0.1">
+            </div>
+
+            <div class="debug-item">
+                <label>특수 셀 아이콘 크기:</label>
+                <input type="number" id="special-cell-icon-scale" value="0.5" min="0.1" max="1.0" step="0.05">
             </div>
 
             <div class="debug-item">

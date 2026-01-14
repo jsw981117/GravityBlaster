@@ -29,22 +29,37 @@ body {
 }
 
 #ui-top {
+    position: relative;
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     padding: 10px 0;
     margin-bottom: 10px;
     gap: 10px;
 }
 
-#score, #turns {
-    font-size: 18px;
-    font-weight: bold;
-    flex: 1;
+#score-container {
+    text-align: left;
 }
 
-#turns {
+#turn-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
     text-align: center;
+}
+
+.ui-label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #ddd;
+    margin-bottom: 4px;
+}
+
+#score-value, #turn-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #fff;
 }
 
 #settings-btn {

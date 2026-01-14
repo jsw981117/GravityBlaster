@@ -1,6 +1,7 @@
 class UI {
     constructor() {
-        this.scoreEl = document.getElementById('score');
+        this.scoreEl = document.getElementById('score-value');
+        this.turnsEl = document.getElementById('turn-value');
         this.gravityArrow = document.getElementById('gravity-arrow');
         this.gameOverEl = document.getElementById('game-over');
         this.finalScoreEl = document.getElementById('final-score');
@@ -137,6 +138,7 @@ class UI {
             explosionDuration: parseInt(document.getElementById('explosion-duration').value),
             explosionRadius: parseFloat(document.getElementById('explosion-radius').value),
             explosionEmojiScale: parseFloat(document.getElementById('explosion-emoji-scale').value),
+            specialCellIconScale: parseFloat(document.getElementById('special-cell-icon-scale').value),
             boardSize: parseInt(document.getElementById('board-size').value),
             removeAnimDuration: parseInt(document.getElementById('remove-anim-duration').value),
             moveAnimDuration: parseInt(document.getElementById('move-anim-duration').value),
@@ -166,6 +168,7 @@ class UI {
         document.getElementById('explosion-duration').value = config.explosionDuration;
         document.getElementById('explosion-radius').value = config.explosionRadius;
         document.getElementById('explosion-emoji-scale').value = config.explosionEmojiScale;
+        document.getElementById('special-cell-icon-scale').value = config.specialCellIconScale;
         document.getElementById('board-size').value = config.boardSize;
         document.getElementById('remove-anim-duration').value = config.removeAnimDuration;
         document.getElementById('move-anim-duration').value = config.moveAnimDuration;
@@ -184,13 +187,12 @@ class UI {
     }
 
     updateScore(score) {
-        this.scoreEl.textContent = `Score: ${score}`;
+        this.scoreEl.textContent = score;
     }
 
     updateTurns(turns) {
-        const turnsEl = document.getElementById('turns');
-        if (!turnsEl) return;
-        turnsEl.textContent = `Turns: ${turns}`;
+        if (!this.turnsEl) return;
+        this.turnsEl.textContent = turns;
     }
 
     setTargetTextSize(size) {

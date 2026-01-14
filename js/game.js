@@ -60,6 +60,7 @@ class Game {
             explosionDuration: 200,     // 폭발 지속시간
             explosionRadius: 1.5,       // 폭발 최대 반경
             explosionEmojiScale: 2.0,   // 이모지 최대 배율
+            specialCellIconScale: 0.5,  // 특수 셀 아이콘 크기
             // 하위 호환성
             bombChance: 5,
             bombRange: 1
@@ -78,6 +79,7 @@ class Game {
         this.ui.setDebugConfig(this.config);
         this.renderer.setShowGrid(this.ui.getShowGrid());
         this.renderer.setBgAlpha(this.config.boardBgAlpha, this.config.previewBgAlpha);
+        this.renderer.setSpecialCellIconScale(this.config.specialCellIconScale);
         this.ui.setTargetTextSize(this.config.targetTextSize);
 
         // 메인화면 표시
@@ -109,6 +111,9 @@ class Game {
 
         // 배경 알파값 적용
         this.renderer.setBgAlpha(this.config.boardBgAlpha, this.config.previewBgAlpha);
+
+        // 특수 셀 아이콘 크기 적용
+        this.renderer.setSpecialCellIconScale(this.config.specialCellIconScale);
 
         // 타겟 텍스트 크기 적용
         this.ui.setTargetTextSize(this.config.targetTextSize);

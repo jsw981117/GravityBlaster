@@ -10,6 +10,7 @@ class Renderer {
         this.showGrid = false;
         this.boardBgAlpha = 0.3;
         this.previewBgAlpha = 0.3;
+        this.specialCellIconScale = 0.5;
         this.resize();
     }
 
@@ -20,6 +21,10 @@ class Renderer {
     setBgAlpha(boardBgAlpha, previewBgAlpha) {
         this.boardBgAlpha = boardBgAlpha;
         this.previewBgAlpha = previewBgAlpha;
+    }
+
+    setSpecialCellIconScale(scale) {
+        this.specialCellIconScale = scale;
     }
 
     resize() {
@@ -85,7 +90,8 @@ class Renderer {
         if (color === BOOM_COLOR || color === TIME_COLOR) {
             const icon = (color === BOOM_COLOR) ? '💣' : '⏰';
             this.ctx.save();
-            this.ctx.font = `${this.cellSize * 0.5 * scale}px Arial`;
+            this.ctx.globalAlpha = 1.0;
+            this.ctx.font = `${this.cellSize * this.specialCellIconScale * scale}px Arial`;
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
             this.ctx.fillText(icon, centerX, centerY);
@@ -357,7 +363,8 @@ class Renderer {
                 // 특수 셀은 아이콘만 렌더링
                 if (color === BOOM_COLOR || color === TIME_COLOR) {
                     const icon = (color === BOOM_COLOR) ? '💣' : '⏰';
-                    this.previewCtx.font = `${cellSize * 0.6}px Arial`;
+                    this.previewCtx.globalAlpha = 1.0;
+                    this.previewCtx.font = `${cellSize * this.specialCellIconScale}px Arial`;
                     this.previewCtx.textAlign = 'center';
                     this.previewCtx.textBaseline = 'middle';
                     this.previewCtx.fillText(icon, x + cellSize / 2, y + cellSize / 2);
