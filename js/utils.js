@@ -24,8 +24,8 @@ const GAME_COLORS = {
 };
 
 // 특수 셀 색상
-const BOOM_COLOR = '#555555';   // 봄 셀 (기존 폭탄)
-const TIME_COLOR = '#FFD700';   // 타임 셀 (금색)
+const BOOM_COLOR = '#FFFFFF';   // 봄 셀 (흰색)
+const TIME_COLOR = '#FFFFFF';   // 타임 셀 (흰색)
 
 // 특수 셀 타입
 const SPECIAL_CELL_TYPES = {

@@ -139,6 +139,7 @@ class UI {
             explosionRadius: parseFloat(document.getElementById('explosion-radius').value),
             explosionEmojiScale: parseFloat(document.getElementById('explosion-emoji-scale').value),
             specialCellIconScale: parseFloat(document.getElementById('special-cell-icon-scale').value),
+            targetHelper: document.getElementById('target-helper').checked,
             boardSize: parseInt(document.getElementById('board-size').value),
             removeAnimDuration: parseInt(document.getElementById('remove-anim-duration').value),
             moveAnimDuration: parseInt(document.getElementById('move-anim-duration').value),
@@ -169,6 +170,7 @@ class UI {
         document.getElementById('explosion-radius').value = config.explosionRadius;
         document.getElementById('explosion-emoji-scale').value = config.explosionEmojiScale;
         document.getElementById('special-cell-icon-scale').value = config.specialCellIconScale;
+        document.getElementById('target-helper').checked = config.targetHelper;
         document.getElementById('board-size').value = config.boardSize;
         document.getElementById('remove-anim-duration').value = config.removeAnimDuration;
         document.getElementById('move-anim-duration').value = config.moveAnimDuration;

@@ -60,7 +60,8 @@ class Game {
             explosionDuration: 200,     // 폭발 지속시간
             explosionRadius: 1.5,       // 폭발 최대 반경
             explosionEmojiScale: 2.0,   // 이모지 최대 배율
-            specialCellIconScale: 0.5,  // 특수 셀 아이콘 크기
+            specialCellIconScale: 0.7,  // 특수 셀 아이콘 크기
+            targetHelper: true,         // 타겟 헬퍼 모드
             // 하위 호환성
             bombChance: 5,
             bombRange: 1
@@ -309,6 +310,31 @@ class Game {
                 } else {
                     const availableColors = Object.values(GAME_COLORS);
                     colors.push(availableColors[Math.floor(Math.random() * availableColors.length)]);
+                }
+            }
+
+            // 타겟 헬퍼: 미리보기에 타겟 색상 최소 1개 포함
+            if (this.config.targetHelper && this.targets && Object.keys(this.targets).length > 0) {
+                const targetColors = Object.keys(this.targets);
+                const hasTargetColor = colors.some(color =>
+                    targetColors.includes(color) && color !== BOOM_COLOR && color !== TIME_COLOR
+                );
+
+                if (!hasTargetColor) {
+                    // 특수 셀이 아닌 인덱스 찾기
+                    const normalIndices = [];
+                    for (let j = 0; j < colors.length; j++) {
+                        if (colors[j] !== BOOM_COLOR && colors[j] !== TIME_COLOR) {
+                            normalIndices.push(j);
+                        }
+                    }
+
+                    // 특수 셀이 아닌 셀이 있으면 하나를 타겟 색상으로 교체
+                    if (normalIndices.length > 0) {
+                        const randomIdx = normalIndices[Math.floor(Math.random() * normalIndices.length)];
+                        const randomTargetColor = targetColors[Math.floor(Math.random() * targetColors.length)];
+                        colors[randomIdx] = randomTargetColor;
+                    }
                 }
             }
 
