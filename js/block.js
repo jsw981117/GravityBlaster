@@ -4,7 +4,7 @@ let blockIdCounter = 0;
 class Block {
     constructor(colors, shape, startY, startX) {
         this.id = ++blockIdCounter;
-        this.colors = colors; // 각 셀의 색상 배열 (BOMB_COLOR 포함 가능)
+        this.colors = colors; // 각 셀의 색상 배열 (특수 셀 포함 가능)
         this.shape = []; // [[y, x], [y, x], ...]
 
         // shape을 절대 좌표로 변환

@@ -23,8 +23,18 @@ const GAME_COLORS = {
     green: '#2ECC71'
 };
 
-// 폭탄 색상
-const BOMB_COLOR = '#555555';
+// 특수 셀 색상
+const BOOM_COLOR = '#555555';   // 봄 셀 (기존 폭탄)
+const TIME_COLOR = '#FFD700';   // 타임 셀 (금색)
+
+// 특수 셀 타입
+const SPECIAL_CELL_TYPES = {
+    BOOM: 'boom',
+    TIME: 'time'
+};
+
+// 하위 호환성 (기존 코드 지원)
+const BOMB_COLOR = BOOM_COLOR;
 
 // 랜덤 블록 형태 선택 (셀 개수 범위 필터링)
 function getRandomShape(minCells = 2, maxCells = 5) {

@@ -47,7 +47,7 @@ class Renderer {
             for (let x = 0; x < board.size; x++) {
                 const cell = board.grid[y][x];
                 if (cell) {
-                    this.drawCell(x, y, cell.color, cell.color === BOMB_COLOR);
+                    this.drawCell(x, y, cell.color, cell.color === BOOM_COLOR);
                 }
             }
         }
@@ -123,12 +123,21 @@ class Renderer {
 
         this.ctx.restore();
 
-        // 폭탄 표시 (💣 이모지)
-        if (isBomb) {
+        // 특수 셀 아이콘
+        let icon = null;
+        if (color === BOOM_COLOR) {
+            icon = '💣';
+        } else if (color === TIME_COLOR) {
+            icon = '⏰';
+        } else if (isBomb) {
+            icon = '💣'; // 하위 호환성
+        }
+
+        if (icon) {
             this.ctx.font = `${this.cellSize * 0.5 * scale}px Arial`;
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
-            this.ctx.fillText('💣', centerX, centerY);
+            this.ctx.fillText(icon, centerX, centerY);
         }
     }
 
@@ -152,16 +161,59 @@ class Renderer {
         return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
     }
 
+    // 폭발 효과 그리기
+    drawExplosion(explosion, config) {
+        const centerX = explosion.x * this.cellSize + this.cellSize / 2;
+        const centerY = explosion.y * this.cellSize + this.cellSize / 2;
+        const progress = explosion.progress;
+        const maxRadius = this.cellSize * config.explosionRadius;
+        const currentRadius = maxRadius * progress;
+
+        this.ctx.save();
+
+        // 그라디언트 스타일
+        if (config.explosionStyle === 'gradient' || config.explosionStyle === 'both') {
+            const gradient = this.ctx.createRadialGradient(
+                centerX, centerY, 0,
+                centerX, centerY, currentRadius
+            );
+
+            // 오렌지 → 노랑 → 투명
+            gradient.addColorStop(0, `rgba(255, 140, 0, ${1.0 - progress})`);   // 오렌지
+            gradient.addColorStop(0.5, `rgba(255, 220, 0, ${0.8 - progress * 0.8})`); // 노랑
+            gradient.addColorStop(1, 'rgba(255, 220, 0, 0)'); // 투명
+
+            this.ctx.fillStyle = gradient;
+            this.ctx.beginPath();
+            this.ctx.arc(centerX, centerY, currentRadius, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+
+        // 이모지 스타일
+        if (config.explosionStyle === 'emoji' || config.explosionStyle === 'both') {
+            const emojiScale = 1.0 + (config.explosionEmojiScale - 1.0) * progress;
+            const alpha = 1.0 - progress;
+
+            this.ctx.globalAlpha = alpha;
+            this.ctx.font = `${this.cellSize * emojiScale}px Arial`;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText('💥', centerX, centerY);
+        }
+
+        this.ctx.restore();
+    }
+
     // 스케일된 셀들 렌더링 (제거 애니메이션용)
     drawScaledCells(cells, scale) {
         for (let cell of cells) {
             // cell: {y: 행, x: 열}이지만 drawCell(x, y)이므로 순서 맞춤
-            this.drawCell(cell.x, cell.y, cell.color, cell.color === BOMB_COLOR, scale);
+            this.drawCell(cell.x, cell.y, cell.color, cell.color === BOOM_COLOR, scale);
         }
     }
 
     // 애니메이션과 함께 렌더링
-    renderWithAnimation(board, animState) {
+    renderWithAnimation(board, animState, explosionConfig = null) {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         // 배경
@@ -201,7 +253,7 @@ class Renderer {
 
                 const cell = board.grid[y][x];
                 if (cell) {
-                    this.drawCell(x, y, cell.color, cell.color === BOMB_COLOR);
+                    this.drawCell(x, y, cell.color, cell.color === BOOM_COLOR);
                 }
             }
         }
@@ -210,17 +262,17 @@ class Renderer {
         for (let cell of animState.movingCells) {
             const scaleX = cell.scaleX !== undefined ? cell.scaleX : 1.0;
             const scaleY = cell.scaleY !== undefined ? cell.scaleY : 1.0;
-            this.drawCell(cell.x, cell.y, cell.color, cell.color === BOMB_COLOR, 1.0, scaleX, scaleY);
+            this.drawCell(cell.x, cell.y, cell.color, cell.color === BOOM_COLOR, 1.0, scaleX, scaleY);
         }
 
         // 제거 중인 셀 렌더링 (축소)
         for (let cell of animState.removingCells) {
-            this.drawCell(cell.x, cell.y, cell.color, cell.color === BOMB_COLOR, cell.scale);
+            this.drawCell(cell.x, cell.y, cell.color, cell.color === BOOM_COLOR, cell.scale);
         }
 
         // 생성 중인 셀 렌더링 (확대)
         for (let cell of animState.spawnCells) {
-            this.drawCell(cell.x, cell.y, cell.color, cell.color === BOMB_COLOR, cell.scale);
+            this.drawCell(cell.x, cell.y, cell.color, cell.color === BOOM_COLOR, cell.scale);
         }
 
         // 점수 팝업 렌더링
@@ -239,6 +291,13 @@ class Renderer {
             this.ctx.strokeText(`+${popup.score}`, px, py);
             this.ctx.fillText(`+${popup.score}`, px, py);
             this.ctx.restore();
+        }
+
+        // 폭발 효과 렌더링
+        if (explosionConfig && animState.explosions) {
+            for (let explosion of animState.explosions) {
+                this.drawExplosion(explosion, explosionConfig);
+            }
         }
     }
 
@@ -278,7 +337,6 @@ class Renderer {
             for (let i = 0; i < block.shape.length; i++) {
                 const [dy, dx] = block.shape[i];
                 const color = block.colors[i];
-                const isBomb = color === BOMB_COLOR;
 
                 const x = offsetX + (dx - minX) * cellSize;
                 const y = offsetY + (dy - minY) * cellSize;
@@ -287,13 +345,22 @@ class Renderer {
                 this.previewCtx.fillStyle = color;
                 this.previewCtx.fillRect(x, y, cellSize - 1, cellSize - 1);
 
-                // 폭탄 표시
-                if (isBomb) {
+                // 특수 셀 아이콘
+                let icon = null;
+                if (color === BOOM_COLOR) {
+                    icon = '💣';
+                } else if (color === TIME_COLOR) {
+                    icon = '⏰';
+                } else if (color === BOOM_COLOR) {
+                    icon = '💣'; // 하위 호환성
+                }
+
+                if (icon) {
                     this.previewCtx.fillStyle = '#fff';
                     this.previewCtx.font = `${cellSize * 0.6}px Arial`;
                     this.previewCtx.textAlign = 'center';
                     this.previewCtx.textBaseline = 'middle';
-                    this.previewCtx.fillText('💣', x + cellSize / 2, y + cellSize / 2);
+                    this.previewCtx.fillText(icon, x + cellSize / 2, y + cellSize / 2);
                 }
             }
         }

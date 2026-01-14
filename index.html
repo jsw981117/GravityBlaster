@@ -24,17 +24,19 @@
             <div class="tutorial-section">
                 <h3>블록 설명</h3>
                 <p><span class="color-blue">■ 파랑</span> <span class="color-red">■ 빨강</span> <span class="color-yellow">■ 노랑</span> <span class="color-green">■ 초록</span>: 4가지 색상 블록</p>
-                <p><span class="color-bomb">💣 폭탄</span>: 인접한 매치 발생 시 주변 폭발</p>
+                <p><span class="color-bomb">💣 봄 셀</span>: 매치되면 주변 셀 폭발</p>
+                <p><span class="color-preview">⏰ 타임 셀</span>: 제거 시 남은 턴 증가 (+5)</p>
             </div>
 
             <div class="tutorial-section">
                 <h3>게임 방식</h3>
-                <p>• 8x8 그리드에서 블록이 즉시 생성됩니다</p>
+                <p>• 6x6 그리드에서 블록이 생성됩니다</p>
                 <p>• <strong>스와이프 또는 WASD/방향키</strong>로 중력 방향 변경</p>
                 <p>• 같은 색 블록 3개 이상 인접(상하좌우)하면 제거</p>
                 <p>• 4개부터 보너스 점수, 연쇄로 추가 점수</p>
                 <p>• 중력 적용 시 블록이 분해되어 개별 이동</p>
-                <p>• 블록 생성 불가 시 게임 오버!</p>
+                <p>• <strong>타겟 색상을 모두 제거하면 턴 회복!</strong></p>
+                <p>• 남은 턴이 0이 되면 게임 오버!</p>
             </div>
 
             <button id="tutorial-start-btn" class="menu-btn">게임 시작</button>
@@ -98,13 +100,52 @@
             </div>
 
             <div class="debug-item">
-                <label>폭탄 생성 확률 (%):</label>
-                <input type="number" id="bomb-chance" value="5" min="0" max="100">
+                <label>특수 셀 전체 확률 (%):</label>
+                <input type="number" id="special-cell-chance" value="5" min="0" max="100">
             </div>
 
             <div class="debug-item">
-                <label>폭탄 폭발 범위:</label>
-                <input type="number" id="bomb-range" value="1" min="0" max="3">
+                <label>봄 셀 가중치:</label>
+                <input type="number" id="boom-cell-weight" value="50" min="0" max="100">
+            </div>
+
+            <div class="debug-item">
+                <label>타임 셀 가중치:</label>
+                <input type="number" id="time-cell-weight" value="50" min="0" max="100">
+            </div>
+
+            <div class="debug-item">
+                <label>봄 셀 폭발 범위:</label>
+                <input type="number" id="boom-range" value="1" min="0" max="3">
+            </div>
+
+            <div class="debug-item">
+                <label>타임 셀 턴 증가량:</label>
+                <input type="number" id="time-cell-turn-bonus" value="5" min="1" max="20">
+            </div>
+
+            <div class="debug-item">
+                <label>폭발 효과 스타일:</label>
+                <select id="explosion-style">
+                    <option value="gradient">그라디언트만</option>
+                    <option value="emoji">이모지만</option>
+                    <option value="both" selected>둘 다</option>
+                </select>
+            </div>
+
+            <div class="debug-item">
+                <label>폭발 지속시간 (ms):</label>
+                <input type="number" id="explosion-duration" value="200" min="0" max="1000" step="10">
+            </div>
+
+            <div class="debug-item">
+                <label>폭발 최대 반경 (셀):</label>
+                <input type="number" id="explosion-radius" value="1.5" min="0.5" max="3" step="0.1">
+            </div>
+
+            <div class="debug-item">
+                <label>폭발 이모지 배율:</label>
+                <input type="number" id="explosion-emoji-scale" value="2.0" min="1.0" max="5.0" step="0.1">
             </div>
 
             <div class="debug-item">

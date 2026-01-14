@@ -2,6 +2,7 @@ class Animator {
     constructor(renderer) {
         this.renderer = renderer;
         this.activeAnimations = [];
+        this.explosions = [];
         this.isRunning = false;
         this.animationFrameId = null;
 
@@ -11,6 +12,12 @@ class Animator {
         this.spawnAnimDuration = 150;
         this.scoreAnimDuration = 300;
         this.scorePopupDistance = 30;
+
+        // 폭발 애니메이션 설정
+        this.explosionDuration = 200;
+        this.explosionRadius = 1.5;
+        this.explosionStyle = 'both';
+        this.explosionEmojiScale = 2.0;
     }
 
     // 애니메이션 설정
@@ -20,6 +27,10 @@ class Animator {
         if (config.spawnAnimDuration !== undefined) this.spawnAnimDuration = config.spawnAnimDuration;
         if (config.scoreAnimDuration !== undefined) this.scoreAnimDuration = config.scoreAnimDuration;
         if (config.scorePopupDistance !== undefined) this.scorePopupDistance = config.scorePopupDistance;
+        if (config.explosionDuration !== undefined) this.explosionDuration = config.explosionDuration;
+        if (config.explosionRadius !== undefined) this.explosionRadius = config.explosionRadius;
+        if (config.explosionStyle !== undefined) this.explosionStyle = config.explosionStyle;
+        if (config.explosionEmojiScale !== undefined) this.explosionEmojiScale = config.explosionEmojiScale;
     }
 
     // 애니메이션 루프 시작
@@ -56,8 +67,15 @@ class Animator {
             return true;
         });
 
+        // 폭발 애니메이션 업데이트
+        this.explosions = this.explosions.filter(exp => {
+            const elapsed = now - exp.startTime;
+            exp.progress = Math.min(elapsed / exp.duration, 1.0);
+            return exp.progress < 1.0;
+        });
+
         // 활성 애니메이션이 있으면 계속 실행
-        if (this.activeAnimations.length > 0) {
+        if (this.activeAnimations.length > 0 || this.explosions.length > 0) {
             this.animationFrameId = requestAnimationFrame(() => this.loop());
         } else {
             this.isRunning = false;
@@ -146,13 +164,31 @@ class Animator {
         });
     }
 
+    // 폭발 애니메이션
+    playExplosion(cells) {
+        if (!cells || cells.length === 0) return;
+
+        for (let cell of cells) {
+            this.explosions.push({
+                x: cell.x,
+                y: cell.y,
+                progress: 0,
+                duration: this.explosionDuration,
+                startTime: performance.now()
+            });
+        }
+
+        this.start();
+    }
+
     // 현재 애니메이션 상태 가져오기
     getAnimationState() {
         const state = {
             removingCells: [],
             movingCells: [],
             spawnCells: [],
-            scorePopups: []
+            scorePopups: [],
+            explosions: this.explosions
         };
 
         for (let anim of this.activeAnimations) {

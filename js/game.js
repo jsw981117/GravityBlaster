@@ -36,8 +36,11 @@ class Game {
         // 디버그 설정
         this.config = {
             blockCount: 1,
-            bombChance: 5,
-            bombRange: 1,
+            specialCellChance: 5,      // 특수 셀 전체 확률
+            boomRange: 1,               // 봄 셀 폭발 범위
+            boomCellWeight: 50,         // 봄 셀 가중치
+            timeCellWeight: 50,         // 타임 셀 가중치
+            timeCellTurnBonus: 5,       // 타임 셀 턴 증가량
             boardSize: 6,
             removeAnimDuration: 150,
             moveAnimDuration: 200,
@@ -52,7 +55,14 @@ class Game {
             turnRecovery: 5,
             targetTextSize: 16,
             boardBgAlpha: 0.3,
-            previewBgAlpha: 0.3
+            previewBgAlpha: 0.3,
+            explosionStyle: 'both',     // 폭발 효과 스타일
+            explosionDuration: 200,     // 폭발 지속시간
+            explosionRadius: 1.5,       // 폭발 최대 반경
+            explosionEmojiScale: 2.0,   // 이모지 최대 배율
+            // 하위 호환성
+            bombChance: 5,
+            bombRange: 1
         };
 
         // UI 이벤트 연결
@@ -201,6 +211,18 @@ class Game {
         this.ui.renderTargets(this.targets, this.removedCells);
     }
 
+    // 특수 셀 타입 선택 (가중치 기반)
+    getSpecialCellType() {
+        const total = this.config.boomCellWeight + this.config.timeCellWeight;
+        const rand = Math.random() * total;
+
+        if (rand < this.config.boomCellWeight) {
+            return BOOM_COLOR;
+        } else {
+            return TIME_COLOR;
+        }
+    }
+
     // 블록 즉시 생성
     spawnBlocks() {
         const count = this.config.blockCount;
@@ -275,8 +297,8 @@ class Game {
 
             // 각 셀에 색상 할당
             for (let j = 0; j < cellCount; j++) {
-                if (Math.random() * 100 < this.config.bombChance) {
-                    colors.push(BOMB_COLOR);
+                if (Math.random() * 100 < this.config.specialCellChance) {
+                    colors.push(this.getSpecialCellType());
                 } else {
                     const availableColors = Object.values(GAME_COLORS);
                     colors.push(availableColors[Math.floor(Math.random() * availableColors.length)]);
@@ -307,7 +329,7 @@ class Game {
             for (let [ny, nx] of neighbors) {
                 if (!isInBounds(ny, nx)) continue;
                 const cell = this.board.grid[ny][nx];
-                if (cell && cell.color !== BOMB_COLOR) {
+                if (cell && cell.color !== BOOM_COLOR && cell.color !== TIME_COLOR) {
                     usedColors.add(cell.color);
                 }
             }
@@ -315,9 +337,9 @@ class Game {
 
         // 각 셀에 색상 할당
         for (let i = 0; i < cellCount; i++) {
-            // 폭탄 확률 체크
-            if (Math.random() * 100 < this.config.bombChance) {
-                colors.push(BOMB_COLOR);
+            // 특수 셀 확률 체크
+            if (Math.random() * 100 < this.config.specialCellChance) {
+                colors.push(this.getSpecialCellType());
                 continue;
             }
 
@@ -362,7 +384,7 @@ class Game {
             for (let [ny, nx] of neighbors) {
                 if (!isInBounds(ny, nx)) continue;
                 const cell = this.board.grid[ny][nx];
-                if (cell && cell.color !== BOMB_COLOR) {
+                if (cell && cell.color !== BOOM_COLOR && cell.color !== TIME_COLOR) {
                     usedColors.add(cell.color);
                 }
             }
@@ -594,6 +616,12 @@ class Game {
             const removeCells = this.board.getMatchCells(matches, this.config.bombRange);
             await this.animator.playRemove(removeCells);
 
+            // 봄 셀 폭발 애니메이션
+            const boomCells = removeCells.filter(cell => cell.color === BOOM_COLOR);
+            if (boomCells.length > 0) {
+                this.animator.playExplosion(boomCells);
+            }
+
             // 점수 팝업 애니메이션
             if (removeCells.length > 0) {
                 const centerY = removeCells.reduce((sum, c) => sum + c.y, 0) / removeCells.length;
@@ -605,10 +633,18 @@ class Game {
             // 제거된 셀 색상 추적 (타겟 시스템용)
             if (this.config.gameOverMode === 3) {
                 for (let cell of removeCells) {
-                    if (cell.color !== BOMB_COLOR) {
+                    // 특수 셀은 타겟 카운트에서 제외
+                    if (cell.color !== BOOM_COLOR && cell.color !== TIME_COLOR) {
                         this.removedCells[cell.color] = (this.removedCells[cell.color] || 0) + 1;
                     }
                 }
+            }
+
+            // 타임 셀 효과: 턴 증가
+            const timeCellCount = removeCells.filter(cell => cell.color === TIME_COLOR).length;
+            if (timeCellCount > 0) {
+                this.remainingTurns += timeCellCount * this.config.timeCellTurnBonus;
+                this.ui.updateTurns(this.remainingTurns);
             }
 
             // 매치 제거
@@ -701,7 +737,7 @@ class Game {
             const animState = this.animator.getAnimationState();
 
             // 보드 + 애니메이션 렌더링
-            this.renderer.renderWithAnimation(this.board, animState);
+            this.renderer.renderWithAnimation(this.board, animState, this.config);
 
             this.animationLoopId = requestAnimationFrame(loop);
         };

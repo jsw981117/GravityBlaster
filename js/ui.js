@@ -128,8 +128,15 @@ class UI {
     getDebugConfig() {
         return {
             blockCount: parseInt(document.getElementById('block-count').value),
-            bombChance: parseInt(document.getElementById('bomb-chance').value),
-            bombRange: parseInt(document.getElementById('bomb-range').value),
+            specialCellChance: parseInt(document.getElementById('special-cell-chance').value),
+            boomCellWeight: parseInt(document.getElementById('boom-cell-weight').value),
+            timeCellWeight: parseInt(document.getElementById('time-cell-weight').value),
+            boomRange: parseInt(document.getElementById('boom-range').value),
+            timeCellTurnBonus: parseInt(document.getElementById('time-cell-turn-bonus').value),
+            explosionStyle: document.getElementById('explosion-style').value,
+            explosionDuration: parseInt(document.getElementById('explosion-duration').value),
+            explosionRadius: parseFloat(document.getElementById('explosion-radius').value),
+            explosionEmojiScale: parseFloat(document.getElementById('explosion-emoji-scale').value),
             boardSize: parseInt(document.getElementById('board-size').value),
             removeAnimDuration: parseInt(document.getElementById('remove-anim-duration').value),
             moveAnimDuration: parseInt(document.getElementById('move-anim-duration').value),
@@ -150,8 +157,15 @@ class UI {
 
     setDebugConfig(config) {
         document.getElementById('block-count').value = config.blockCount;
-        document.getElementById('bomb-chance').value = config.bombChance;
-        document.getElementById('bomb-range').value = config.bombRange;
+        document.getElementById('special-cell-chance').value = config.specialCellChance;
+        document.getElementById('boom-cell-weight').value = config.boomCellWeight;
+        document.getElementById('time-cell-weight').value = config.timeCellWeight;
+        document.getElementById('boom-range').value = config.boomRange;
+        document.getElementById('time-cell-turn-bonus').value = config.timeCellTurnBonus;
+        document.getElementById('explosion-style').value = config.explosionStyle;
+        document.getElementById('explosion-duration').value = config.explosionDuration;
+        document.getElementById('explosion-radius').value = config.explosionRadius;
+        document.getElementById('explosion-emoji-scale').value = config.explosionEmojiScale;
         document.getElementById('board-size').value = config.boardSize;
         document.getElementById('remove-anim-duration').value = config.removeAnimDuration;
         document.getElementById('move-anim-duration').value = config.moveAnimDuration;

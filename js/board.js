@@ -103,7 +103,8 @@ class Board {
 
         for (let y = 0; y < this.size; y++) {
             for (let x = 0; x < this.size; x++) {
-                if (visited[y][x] || !this.grid[y][x] || this.grid[y][x].color === BOMB_COLOR) continue;
+                const cellColor = this.grid[y][x]?.color;
+                if (visited[y][x] || !this.grid[y][x] || cellColor === BOOM_COLOR || cellColor === TIME_COLOR) continue;
 
                 const color = this.grid[y][x].color;
                 const group = [];
@@ -123,8 +124,9 @@ class Board {
 
                     for (let [ny, nx] of neighbors) {
                         if (!isInBounds(ny, nx) || visited[ny][nx]) continue;
-                        if (!this.grid[ny][nx] || this.grid[ny][nx].color === BOMB_COLOR) continue;
-                        if (this.grid[ny][nx].color !== color) continue;
+                        const neighborColor = this.grid[ny][nx]?.color;
+                        if (!this.grid[ny][nx] || neighborColor === BOOM_COLOR || neighborColor === TIME_COLOR) continue;
+                        if (neighborColor !== color) continue;
 
                         visited[ny][nx] = true;
                         queue.push([ny, nx]);
@@ -166,7 +168,7 @@ class Board {
 
                 for (let [ny, nx] of neighbors) {
                     if (!isInBounds(ny, nx) || !this.grid[ny][nx]) continue;
-                    if (this.grid[ny][nx].color === BOMB_COLOR) {
+                    if (this.grid[ny][nx].color === BOOM_COLOR) {
                         // 폭탄 주변 8칸 제거
                         const explosionCells = getNeighborsInRange(ny, nx, bombRange);
                         for (let [ey, ex] of explosionCells) {
@@ -214,7 +216,7 @@ class Board {
 
                 for (let [ny, nx] of neighbors) {
                     if (!isInBounds(ny, nx) || !this.grid[ny][nx]) continue;
-                    if (this.grid[ny][nx].color === BOMB_COLOR) {
+                    if (this.grid[ny][nx].color === BOOM_COLOR) {
                         // 폭탄 주변 제거
                         const explosionCells = getNeighborsInRange(ny, nx, bombRange);
                         for (let [ey, ex] of explosionCells) {
