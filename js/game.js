@@ -64,6 +64,7 @@ class Game {
         };
 
         // 설정 초기화
+        BOARD_SIZE = this.config.boardSize; // 전역 변수 업데이트
         this.ui.setDebugConfig(this.config);
         this.renderer.setShowGrid(this.ui.getShowGrid());
         this.renderer.setBgAlpha(this.config.boardBgAlpha, this.config.previewBgAlpha);

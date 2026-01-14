@@ -1,5 +1,5 @@
 // 보드 크기 (동적 설정 가능)
-let BOARD_SIZE = 8;
+let BOARD_SIZE = 6;
 
 // 블록 형태 정의 (2~5칸)
 const BLOCK_SHAPES = {
