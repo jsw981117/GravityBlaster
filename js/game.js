@@ -306,8 +306,9 @@ class Game {
             const shape = getRandomShape(this.config.minCells, this.config.maxCells);
             const colors = [];
             const cellCount = shape.length;
+            const colorCount = {}; // 색상별 사용 횟수
 
-            // 각 셀에 색상 할당 (블록당 특수 셀 1개까지)
+            // 각 셀에 색상 할당 (블록당 특수 셀 1개까지, 같은 색 최대 2개)
             let specialCellCount = 0;
             for (let j = 0; j < cellCount; j++) {
                 if (specialCellCount === 0 && Math.random() * 100 < this.config.specialCellChance) {
@@ -315,7 +316,19 @@ class Game {
                     specialCellCount++;
                 } else {
                     const availableColors = Object.values(GAME_COLORS);
-                    colors.push(availableColors[Math.floor(Math.random() * availableColors.length)]);
+                    // 2개 미만인 색상만 선택
+                    const validColors = availableColors.filter(c => (colorCount[c] || 0) < 2);
+
+                    if (validColors.length > 0) {
+                        const selectedColor = validColors[Math.floor(Math.random() * validColors.length)];
+                        colors.push(selectedColor);
+                        colorCount[selectedColor] = (colorCount[selectedColor] || 0) + 1;
+                    } else {
+                        // 모든 색이 2개씩 사용되었으면 랜덤 선택
+                        const selectedColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+                        colors.push(selectedColor);
+                        colorCount[selectedColor] = (colorCount[selectedColor] || 0) + 1;
+                    }
                 }
             }
 
@@ -712,7 +725,6 @@ class Game {
 
             // 매치 제거
             this.board.removeMatches(matches, this.config.bombRange);
-            chain++;
         }
 
         this.stopAnimationLoop();
