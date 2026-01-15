@@ -25,7 +25,7 @@ const GAME_COLORS = {
 
 // 특수 셀 색상
 const BOOM_COLOR = '#FFFFFF';   // 봄 셀 (흰색)
-const TIME_COLOR = '#FFFFFF';   // 타임 셀 (흰색)
+const TIME_COLOR = '#FFFFFE';   // 타임 셀 (흰색, 육안 구분 불가)
 
 // 특수 셀 타입
 const SPECIAL_CELL_TYPES = {
