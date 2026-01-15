@@ -184,6 +184,22 @@ class Animator {
         });
     }
 
+    // 타겟 완료 애니메이션
+    playTargetComplete(duration) {
+        return new Promise(resolve => {
+            const anim = {
+                type: 'targetComplete',
+                startTime: performance.now(),
+                duration: duration,
+                progress: 0,
+                resolve: resolve
+            };
+
+            this.activeAnimations.push(anim);
+            this.start();
+        });
+    }
+
     // 폭발 애니메이션
     playExplosion(cells) {
         if (!cells || cells.length === 0) return;
@@ -209,6 +225,7 @@ class Animator {
             spawnCells: [],
             scorePopups: [],
             turnPopups: [],
+            targetCompletePopups: [],
             explosions: this.explosions
         };
 
@@ -300,6 +317,24 @@ class Animator {
                         offsetY: turnOffsetY,
                         turnBonus: anim.turnBonus,
                         alpha: turnAlpha
+                    });
+                    break;
+
+                case 'targetComplete':
+                    // fade in + hold + fade out
+                    let tcAlpha;
+                    if (anim.progress < 0.2) {
+                        // fade in (0~0.2)
+                        tcAlpha = anim.progress / 0.2;
+                    } else if (anim.progress < 0.8) {
+                        // hold (0.2~0.8)
+                        tcAlpha = 1.0;
+                    } else {
+                        // fade out (0.8~1.0)
+                        tcAlpha = (1.0 - anim.progress) / 0.2;
+                    }
+                    state.targetCompletePopups.push({
+                        alpha: tcAlpha
                     });
                     break;
             }

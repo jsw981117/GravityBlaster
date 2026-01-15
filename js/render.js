@@ -328,6 +328,34 @@ class Renderer {
             this.ctx.restore();
         }
 
+        // 타겟 완료 팝업 렌더링
+        for (let popup of animState.targetCompletePopups) {
+            const centerX = this.canvas.width / 2;
+            const centerY = this.canvas.height / 2;
+            const textSize = this.cellSize * (explosionConfig?.targetCompleteTextSize || 1.0);
+
+            this.ctx.save();
+            this.ctx.globalAlpha = popup.alpha;
+            this.ctx.font = `bold ${textSize}px Arial`;
+            this.ctx.fillStyle = '#FFD700'; // 금색
+            this.ctx.strokeStyle = '#000';
+            this.ctx.lineWidth = 4;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+
+            // TARGET (위)
+            const targetY = centerY - textSize * 0.6;
+            this.ctx.strokeText('TARGET', centerX, targetY);
+            this.ctx.fillText('TARGET', centerX, targetY);
+
+            // COMPLETE (아래)
+            const completeY = centerY + textSize * 0.6;
+            this.ctx.strokeText('COMPLETE', centerX, completeY);
+            this.ctx.fillText('COMPLETE', centerX, completeY);
+
+            this.ctx.restore();
+        }
+
         // 폭발 효과 렌더링
         if (explosionConfig && animState.explosions) {
             for (let explosion of animState.explosions) {

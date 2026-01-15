@@ -156,7 +156,9 @@ class UI {
             boardBgAlpha: parseFloat(document.getElementById('board-bg-alpha').value),
             previewBgAlpha: parseFloat(document.getElementById('preview-bg-alpha').value),
             turnRecovery: parseInt(document.getElementById('turn-recovery').value),
-            targetTextSize: parseInt(document.getElementById('target-text-size').value)
+            targetTextSize: parseInt(document.getElementById('target-text-size').value),
+            targetCompleteTextSize: parseFloat(document.getElementById('target-complete-text-size').value),
+            targetCompleteDuration: parseInt(document.getElementById('target-complete-duration').value)
         };
     }
 
@@ -188,6 +190,8 @@ class UI {
         document.getElementById('preview-bg-alpha').value = config.previewBgAlpha;
         document.getElementById('turn-recovery').value = config.turnRecovery;
         document.getElementById('target-text-size').value = config.targetTextSize;
+        document.getElementById('target-complete-text-size').value = config.targetCompleteTextSize;
+        document.getElementById('target-complete-duration').value = config.targetCompleteDuration;
     }
 
     updateScore(score) {

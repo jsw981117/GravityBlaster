@@ -57,6 +57,8 @@ class Game {
             turnsAfterThreshold: 5,
             turnRecovery: 5,
             targetTextSize: 16,
+            targetCompleteTextSize: 1.0,  // 타겟 완료 텍스트 크기 (cellSize 배수)
+            targetCompleteDuration: 1500, // 타겟 완료 표시 시간 (ms)
             boardBgAlpha: 0.3,
             previewBgAlpha: 0.3,
             explosionStyle: 'both',     // 폭발 효과 스타일
@@ -602,6 +604,11 @@ class Game {
             // 타겟 완료 체크 (조건 3, 턴 감소 전)
             if (this.config.gameOverMode === 3) {
                 if (this.checkTargetsCompleted()) {
+                    // TARGET COMPLETE 애니메이션
+                    this.startAnimationLoop();
+                    await this.animator.playTargetComplete(this.config.targetCompleteDuration);
+                    this.stopAnimationLoop();
+
                     // 턴 회복 (최대 20), 타겟 개수 +1, 새 타겟 생성
                     this.remainingTurns = Math.min(20, this.remainingTurns + this.config.turnRecovery);
                     this.currentTargetCount = Math.min(10, this.currentTargetCount + 1);
@@ -692,11 +699,12 @@ class Game {
                 this.animator.playExplosion(boomCells);
             }
 
-            // 점수 팝업 애니메이션
-            if (removeCells.length > 0) {
-                const centerY = removeCells.reduce((sum, c) => sum + c.y, 0) / removeCells.length;
-                const centerX = removeCells.reduce((sum, c) => sum + c.x, 0) / removeCells.length;
-                const score = this.calculateScore(removeCells.length);
+            // 각 매치별로 점수 팝업 애니메이션
+            for (let match of matches) {
+                const matchCells = match.cells;
+                const centerY = matchCells.reduce((sum, c) => sum + c.y, 0) / matchCells.length;
+                const centerX = matchCells.reduce((sum, c) => sum + c.x, 0) / matchCells.length;
+                const score = this.calculateScore(matchCells.length);
                 this.animator.playScorePopup(centerX, centerY, score, this.currentCombo); // 병렬 실행
             }
 
