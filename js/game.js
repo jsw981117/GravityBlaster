@@ -626,8 +626,8 @@ class Game {
 
             // 게임 오버 조건 체크 (조건 3: 타겟 기반)
             if (this.config.gameOverMode === 3) {
-                if (this.remainingTurns <= 0) {
-                    // 턴 0 + 타겟 미완료 = 게임 오버
+                if (this.remainingTurns <= 0 && this.currentCombo === 0) {
+                    // 턴 0 + 콤보 아님 = 게임 오버
                     this.gameOver();
                     return;
                 }
