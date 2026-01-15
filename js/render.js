@@ -280,18 +280,51 @@ class Renderer {
         // 점수 팝업 렌더링
         for (let popup of animState.scorePopups) {
             const px = popup.x * this.cellSize + this.cellSize / 2;
-            const py = popup.y * this.cellSize + this.cellSize / 2;
+            const py = popup.y * this.cellSize + this.cellSize / 2 + (popup.offsetY || 0);
 
             this.ctx.save();
             this.ctx.globalAlpha = popup.alpha;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+
+            // 콤보 표시 (2 이상일 때)
+            if (popup.combo >= 2) {
+                const comboY = py - this.cellSize * 0.25;
+                this.ctx.font = `bold ${this.cellSize * 0.3}px Arial`;
+                this.ctx.fillStyle = '#FF6B6B'; // 빨간색
+                this.ctx.strokeStyle = '#000';
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeText(`COMBO ${popup.combo}`, px, comboY);
+                this.ctx.fillText(`COMBO ${popup.combo}`, px, comboY);
+            }
+
+            // 점수 표시
+            const scoreY = (popup.combo >= 2) ? py + this.cellSize * 0.15 : py;
             this.ctx.font = `bold ${this.cellSize * 0.4}px Arial`;
             this.ctx.fillStyle = '#FFD700'; // 금색
             this.ctx.strokeStyle = '#000';
             this.ctx.lineWidth = 2;
+            this.ctx.strokeText(`+${popup.score}`, px, scoreY);
+            this.ctx.fillText(`+${popup.score}`, px, scoreY);
+
+            this.ctx.restore();
+        }
+
+        // 턴 증가 팝업 렌더링
+        for (let popup of animState.turnPopups) {
+            const px = popup.x * this.cellSize + this.cellSize / 2;
+            const py = popup.y * this.cellSize + this.cellSize / 2 + (popup.offsetY || 0);
+
+            this.ctx.save();
+            this.ctx.globalAlpha = popup.alpha;
+            this.ctx.font = `bold ${this.cellSize * 0.4}px Arial`;
+            this.ctx.fillStyle = '#4ECDC4'; // 청록색
+            this.ctx.strokeStyle = '#000';
+            this.ctx.lineWidth = 2;
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
-            this.ctx.strokeText(`+${popup.score}`, px, py);
-            this.ctx.fillText(`+${popup.score}`, px, py);
+            this.ctx.strokeText(`+${popup.turnBonus} TURN`, px, py);
+            this.ctx.fillText(`+${popup.turnBonus} TURN`, px, py);
             this.ctx.restore();
         }
 

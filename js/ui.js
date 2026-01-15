@@ -2,6 +2,8 @@ class UI {
     constructor() {
         this.scoreEl = document.getElementById('score-value');
         this.turnsEl = document.getElementById('turn-value');
+        this.turnContainer = document.getElementById('turn-container');
+        this.turnLabel = this.turnContainer ? this.turnContainer.querySelector('.ui-label') : null;
         this.gravityArrow = document.getElementById('gravity-arrow');
         this.gameOverEl = document.getElementById('game-over');
         this.finalScoreEl = document.getElementById('final-score');
@@ -192,9 +194,18 @@ class UI {
         this.scoreEl.textContent = score;
     }
 
-    updateTurns(turns) {
-        if (!this.turnsEl) return;
-        this.turnsEl.textContent = turns;
+    updateTurns(turns, comboMode = false) {
+        if (!this.turnsEl || !this.turnLabel) return;
+
+        if (comboMode && turns === 0) {
+            // COMBO HIGH 모드
+            this.turnLabel.textContent = 'COMBO';
+            this.turnsEl.textContent = 'HIGH';
+        } else {
+            // 일반 TURN 모드
+            this.turnLabel.textContent = 'TURN';
+            this.turnsEl.textContent = turns;
+        }
     }
 
     setTargetTextSize(size) {

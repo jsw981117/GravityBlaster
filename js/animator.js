@@ -146,13 +146,33 @@ class Animator {
     }
 
     // 점수 팝업 애니메이션
-    playScorePopup(x, y, score) {
+    playScorePopup(x, y, score, combo = 0) {
         return new Promise(resolve => {
             const anim = {
                 type: 'score',
                 x: x,
                 y: y,
                 score: score,
+                combo: combo,
+                startTime: performance.now(),
+                duration: this.scoreAnimDuration,
+                progress: 0,
+                resolve: resolve
+            };
+
+            this.activeAnimations.push(anim);
+            this.start();
+        });
+    }
+
+    // 턴 증가 팝업 애니메이션
+    playTurnPopup(x, y, turnBonus) {
+        return new Promise(resolve => {
+            const anim = {
+                type: 'turn',
+                x: x,
+                y: y,
+                turnBonus: turnBonus,
                 startTime: performance.now(),
                 duration: this.scoreAnimDuration,
                 progress: 0,
@@ -188,6 +208,7 @@ class Animator {
             movingCells: [],
             spawnCells: [],
             scorePopups: [],
+            turnPopups: [],
             explosions: this.explosions
         };
 
@@ -261,9 +282,24 @@ class Animator {
                     const alpha = 1.0 - anim.progress;
                     state.scorePopups.push({
                         x: anim.x,
-                        y: anim.y + offsetY,
+                        y: anim.y,
+                        offsetY: offsetY,
                         score: anim.score,
+                        combo: anim.combo,
                         alpha: alpha
+                    });
+                    break;
+
+                case 'turn':
+                    // 위로 이동 + fade
+                    const turnOffsetY = -this.scorePopupDistance * anim.progress;
+                    const turnAlpha = 1.0 - anim.progress;
+                    state.turnPopups.push({
+                        x: anim.x,
+                        y: anim.y,
+                        offsetY: turnOffsetY,
+                        turnBonus: anim.turnBonus,
+                        alpha: turnAlpha
                     });
                     break;
             }
