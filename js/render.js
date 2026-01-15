@@ -134,7 +134,6 @@ class Renderer {
             const icon = (color === BOOM_COLOR) ? '💣' : '⏰';
             this.ctx.save();
             this.ctx.globalAlpha = 1.0;
-            this.ctx.fillStyle = '#000';
             this.ctx.font = `${this.cellSize * this.specialCellIconScale * scale}px Arial`;
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'middle';
@@ -352,7 +351,6 @@ class Renderer {
                     const icon = (color === BOOM_COLOR) ? '💣' : '⏰';
                     this.previewCtx.save();
                     this.previewCtx.globalAlpha = 1.0;
-                    this.previewCtx.fillStyle = '#000';
                     this.previewCtx.font = `${cellSize * this.specialCellIconScale}px Arial`;
                     this.previewCtx.textAlign = 'center';
                     this.previewCtx.textBaseline = 'middle';
