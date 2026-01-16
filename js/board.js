@@ -23,7 +23,8 @@ class Board {
                 if (isInBounds(y, x)) {
                     this.grid[y][x] = {
                         blockId: block.id,
-                        color: block.getColorAt(i)
+                        color: block.getColorAt(i),
+                        isNewlySpawned: block.isNewlySpawned || false
                     };
                 }
             }

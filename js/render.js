@@ -52,7 +52,9 @@ class Renderer {
             for (let x = 0; x < board.size; x++) {
                 const cell = board.grid[y][x];
                 if (cell) {
-                    this.drawCell(x, y, cell.color, cell.color === BOOM_COLOR);
+                    // 새로 생성된 블록은 75% 크기로 렌더링
+                    const scale = cell.isNewlySpawned ? 0.75 : 1.0;
+                    this.drawCell(x, y, cell.color, cell.color === BOOM_COLOR, scale);
                 }
             }
         }
