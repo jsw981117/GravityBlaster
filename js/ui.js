@@ -97,6 +97,11 @@ class UI {
             if (this.onApplyDebug) this.onApplyDebug();
         };
 
+        // 디버그 기본값 되돌리기
+        document.getElementById('reset-debug-btn').onclick = () => {
+            if (this.onResetDebug) this.onResetDebug();
+        };
+
         // 디버그 닫기
         document.getElementById('close-debug-btn').onclick = () => {
             this.hideDebug();

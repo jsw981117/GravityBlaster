@@ -58,7 +58,7 @@ class Game {
             turnRecovery: 5,
             targetTextSize: 16,
             targetCompleteTextSize: 1.0,  // 타겟 완료 텍스트 크기 (cellSize 배수)
-            targetCompleteDuration: 1500, // 타겟 완료 표시 시간 (ms)
+            targetCompleteDuration: 1200, // 타겟 완료 표시 시간 (ms)
             boardBgAlpha: 0.3,
             previewBgAlpha: 0.3,
             explosionStyle: 'both',     // 폭발 효과 스타일
@@ -75,6 +75,7 @@ class Game {
         // UI 이벤트 연결
         this.ui.onStartGame = () => this.startGame();
         this.ui.onApplyDebug = () => this.applyDebugConfig();
+        this.ui.onResetDebug = () => this.resetDebugConfig();
         this.ui.onGridToggle = () => {
             this.renderer.setShowGrid(this.ui.getShowGrid());
             this.render();
@@ -128,6 +129,44 @@ class Game {
 
         this.ui.hideDebug();
         alert('설정이 적용되었습니다.');
+    }
+
+    resetDebugConfig() {
+        // 기본값으로 재설정
+        Object.assign(this.config, {
+            blockCount: 1,
+            specialCellChance: 5,
+            boomRange: 1,
+            boomCellWeight: 50,
+            timeCellWeight: 50,
+            timeCellTurnBonus: 5,
+            boardSize: 6,
+            removeAnimDuration: 150,
+            moveAnimDuration: 200,
+            spawnAnimDuration: 150,
+            scoreAnimDuration: 300,
+            scorePopupDistance: 30,
+            minCells: 2,
+            maxCells: 4,
+            gameOverMode: 3,
+            cellThreshold: 70,
+            turnsAfterThreshold: 5,
+            turnRecovery: 5,
+            targetTextSize: 16,
+            targetCompleteTextSize: 1.0,
+            targetCompleteDuration: 1200,
+            boardBgAlpha: 0.3,
+            previewBgAlpha: 0.3,
+            explosionStyle: 'both',
+            explosionDuration: 200,
+            explosionRadius: 1.5,
+            explosionEmojiScale: 2.0,
+            specialCellIconScale: 0.7,
+            targetHelper: true
+        });
+
+        this.ui.setDebugConfig(this.config);
+        alert('기본값으로 되돌렸습니다.');
     }
 
     startGame() {
@@ -687,6 +726,15 @@ class Game {
                 totalMatches.push(match);
             }
 
+            // 각 매치별로 점수 팝업 애니메이션 (제거와 동시 실행)
+            for (let match of matches) {
+                const matchCells = match.cells;
+                const centerY = matchCells.reduce((sum, c) => sum + c.y, 0) / matchCells.length;
+                const centerX = matchCells.reduce((sum, c) => sum + c.x, 0) / matchCells.length;
+                const score = this.calculateScore(matchCells.length);
+                this.animator.playScorePopup(centerX, centerY, score, this.currentCombo);
+            }
+
             // 제거 애니메이션
             const removeCells = this.board.getMatchCells(matches, this.config.bombRange);
             await this.animator.playRemove(removeCells);
@@ -695,15 +743,6 @@ class Game {
             const boomCells = removeCells.filter(cell => cell.color === BOOM_COLOR);
             if (boomCells.length > 0) {
                 this.animator.playExplosion(boomCells);
-            }
-
-            // 각 매치별로 점수 팝업 애니메이션
-            for (let match of matches) {
-                const matchCells = match.cells;
-                const centerY = matchCells.reduce((sum, c) => sum + c.y, 0) / matchCells.length;
-                const centerX = matchCells.reduce((sum, c) => sum + c.x, 0) / matchCells.length;
-                const score = this.calculateScore(matchCells.length);
-                this.animator.playScorePopup(centerX, centerY, score, this.currentCombo); // 병렬 실행
             }
 
             // 제거된 셀 색상 추적 (타겟 시스템용)
