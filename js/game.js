@@ -176,6 +176,9 @@ class Game {
         // canvas가 보이는 상태에서 크기 재계산
         this.renderer.resize();
 
+        // 렌더링 루프 시작 (게임 종료까지 계속 실행)
+        this.startAnimationLoop();
+
         this.init();
     }
 
@@ -214,9 +217,7 @@ class Game {
         }
 
         // 생성 애니메이션
-        this.startAnimationLoop();
         await this.animator.playSpawn(spawnData);
-        this.stopAnimationLoop();
 
         this.state = 'waiting';
         this.render();
@@ -635,9 +636,7 @@ class Game {
             }
 
             if (spawnData) {
-                this.startAnimationLoop();
                 await this.animator.playSpawn(spawnData);
-                this.stopAnimationLoop();
             }
 
             // 타겟 완료 체크 (조건 3, 턴 감소 전)
@@ -705,8 +704,6 @@ class Game {
     async processTurn(direction) {
         let totalMatches = [];
 
-        this.startAnimationLoop();
-
         while (true) {
             // 중력 적용 + 이동 애니메이션
             const moveData = this.applyGravity(direction);
@@ -771,8 +768,6 @@ class Game {
             // 매치 제거
             this.board.removeMatches(matches, this.config.bombRange);
         }
-
-        this.stopAnimationLoop();
 
         // UI 업데이트
         this.ui.updateGravityIndicator(direction);
@@ -865,6 +860,7 @@ class Game {
     // 게임 오버
     gameOver() {
         this.state = 'gameover';
+        this.stopAnimationLoop();
         this.ui.showGameOver(this.score, () => this.restart());
     }
 
