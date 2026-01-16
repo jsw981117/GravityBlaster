@@ -19,7 +19,8 @@ class Gravity {
                 fromX: x,
                 toY: y,
                 toX: x,
-                color: block.colors[0]
+                color: block.colors[0],
+                isNewlySpawned: block.isNewlySpawned || false
             });
         }
 
@@ -53,6 +54,11 @@ class Gravity {
             if (data.fromY !== data.toY || data.fromX !== data.toX) {
                 movedCells.push(data);
             }
+        }
+
+        // 첫 이동 완료 후 모든 블록의 isNewlySpawned 플래그 제거
+        for (let block of this.board.blocks) {
+            block.isNewlySpawned = false;
         }
 
         return movedCells;

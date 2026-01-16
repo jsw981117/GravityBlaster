@@ -246,21 +246,27 @@ class Animator {
                         const y = cell.fromY + (cell.toY - cell.fromY) * anim.progress;
                         const x = cell.fromX + (cell.toX - cell.fromX) * anim.progress;
 
+                        // 새로 생성된 블록: 0.75 → 1.0 확대
+                        let baseScale = 1.0;
+                        if (cell.isNewlySpawned) {
+                            baseScale = 0.75 + 0.25 * anim.progress;
+                        }
+
                         // 착지 애니메이션 (마지막 20%에서 찌그러지고 튕김)
-                        let scaleX = 1.0;
-                        let scaleY = 1.0;
+                        let scaleX = baseScale;
+                        let scaleY = baseScale;
                         if (anim.progress > 0.8) {
                             const landProgress = (anim.progress - 0.8) / 0.2;
                             if (landProgress < 0.5) {
                                 // 찌그러짐 (0.5까지)
                                 const t = landProgress / 0.5;
-                                scaleY = 1.0 - t * 0.3; // 0.7까지 감소
-                                scaleX = 1.0 + t * 0.3; // 1.3까지 증가
+                                scaleY = baseScale * (1.0 - t * 0.3); // 0.7배까지 감소
+                                scaleX = baseScale * (1.0 + t * 0.3); // 1.3배까지 증가
                             } else {
                                 // 튕김 (0.5~1.0)
                                 const t = (landProgress - 0.5) / 0.5;
-                                scaleY = 0.7 + t * 0.3; // 0.7 → 1.0
-                                scaleX = 1.3 - t * 0.3; // 1.3 → 1.0
+                                scaleY = baseScale * (0.7 + t * 0.3); // 0.7 → 1.0
+                                scaleX = baseScale * (1.3 - t * 0.3); // 1.3 → 1.0
                             }
                         }
 
@@ -277,15 +283,15 @@ class Animator {
                     break;
 
                 case 'spawn':
-                    // bounce: 0.0 → 1.2 → 1.0
+                    // bounce: 0.0 → 0.9 → 0.75
                     let spawnScale;
                     if (anim.progress < 0.6) {
-                        // 0.0 → 1.2 (첫 60%)
-                        spawnScale = (anim.progress / 0.6) * 1.2;
+                        // 0.0 → 0.9 (첫 60%)
+                        spawnScale = (anim.progress / 0.6) * 0.9;
                     } else {
-                        // 1.2 → 1.0 (남은 40%)
+                        // 0.9 → 0.75 (남은 40%)
                         const t = (anim.progress - 0.6) / 0.4;
-                        spawnScale = 1.2 - t * 0.2;
+                        spawnScale = 0.9 - t * 0.15;
                     }
                     state.spawnCells = anim.cells.map(cell => ({
                         ...cell,

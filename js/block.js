@@ -6,6 +6,7 @@ class Block {
         this.id = ++blockIdCounter;
         this.colors = colors; // 각 셀의 색상 배열 (특수 셀 포함 가능)
         this.shape = []; // [[y, x], [y, x], ...]
+        this.isNewlySpawned = true; // 새로 생성된 블록 (첫 이동 시 확대)
 
         // shape을 절대 좌표로 변환
         for (let [dy, dx] of shape) {

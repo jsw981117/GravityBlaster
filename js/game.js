@@ -604,10 +604,8 @@ class Game {
             // 타겟 완료 체크 (조건 3, 턴 감소 전)
             if (this.config.gameOverMode === 3) {
                 if (this.checkTargetsCompleted()) {
-                    // TARGET COMPLETE 애니메이션
-                    this.startAnimationLoop();
-                    await this.animator.playTargetComplete(this.config.targetCompleteDuration);
-                    this.stopAnimationLoop();
+                    // TARGET COMPLETE 애니메이션 (병렬 실행)
+                    this.animator.playTargetComplete(this.config.targetCompleteDuration);
 
                     // 턴 회복 (최대 20), 타겟 개수 +1, 새 타겟 생성
                     this.remainingTurns = Math.min(20, this.remainingTurns + this.config.turnRecovery);
