@@ -643,8 +643,10 @@ class Game {
             // 타겟 완료 체크 (조건 3, 턴 감소 전)
             if (this.config.gameOverMode === 3) {
                 if (this.checkTargetsCompleted()) {
-                    // TARGET COMPLETE 애니메이션 (병렬 실행)
-                    this.animator.playTargetComplete(this.config.targetCompleteDuration);
+                    // TARGET COMPLETE 애니메이션
+                    this.startAnimationLoop();
+                    await this.animator.playTargetComplete(this.config.targetCompleteDuration);
+                    this.stopAnimationLoop();
 
                     // 턴 회복 (최대 20), 타겟 개수 +1, 새 타겟 생성
                     this.remainingTurns = Math.min(20, this.remainingTurns + this.config.turnRecovery);
@@ -726,15 +728,6 @@ class Game {
                 totalMatches.push(match);
             }
 
-            // 각 매치별로 점수 팝업 애니메이션 (제거와 동시 실행)
-            for (let match of matches) {
-                const matchCells = match.cells;
-                const centerY = matchCells.reduce((sum, c) => sum + c.y, 0) / matchCells.length;
-                const centerX = matchCells.reduce((sum, c) => sum + c.x, 0) / matchCells.length;
-                const score = this.calculateScore(matchCells.length);
-                this.animator.playScorePopup(centerX, centerY, score, this.currentCombo);
-            }
-
             // 제거 애니메이션
             const removeCells = this.board.getMatchCells(matches, this.config.bombRange);
             await this.animator.playRemove(removeCells);
@@ -743,6 +736,15 @@ class Game {
             const boomCells = removeCells.filter(cell => cell.color === BOOM_COLOR);
             if (boomCells.length > 0) {
                 this.animator.playExplosion(boomCells);
+            }
+
+            // 각 매치별로 점수 팝업 애니메이션 (병렬 실행)
+            for (let match of matches) {
+                const matchCells = match.cells;
+                const centerY = matchCells.reduce((sum, c) => sum + c.y, 0) / matchCells.length;
+                const centerX = matchCells.reduce((sum, c) => sum + c.x, 0) / matchCells.length;
+                const score = this.calculateScore(matchCells.length);
+                this.animator.playScorePopup(centerX, centerY, score, this.currentCombo);
             }
 
             // 제거된 셀 색상 추적 (타겟 시스템용)
