@@ -643,10 +643,8 @@ class Game {
             // 타겟 완료 체크 (조건 3, 턴 감소 전)
             if (this.config.gameOverMode === 3) {
                 if (this.checkTargetsCompleted()) {
-                    // TARGET COMPLETE 애니메이션
-                    this.startAnimationLoop();
-                    await this.animator.playTargetComplete(this.config.targetCompleteDuration);
-                    this.stopAnimationLoop();
+                    // TARGET COMPLETE 애니메이션 (병렬 실행)
+                    this.animator.playTargetComplete(this.config.targetCompleteDuration);
 
                     // 턴 회복 (최대 20), 타겟 개수 +1, 새 타겟 생성
                     this.remainingTurns = Math.min(20, this.remainingTurns + this.config.turnRecovery);
@@ -741,8 +739,8 @@ class Game {
             // 각 매치별로 점수 팝업 애니메이션 (병렬 실행)
             for (let match of matches) {
                 const matchCells = match.cells;
-                const centerY = matchCells.reduce((sum, c) => sum + c.y, 0) / matchCells.length;
-                const centerX = matchCells.reduce((sum, c) => sum + c.x, 0) / matchCells.length;
+                const centerY = matchCells.reduce((sum, c) => sum + c[0], 0) / matchCells.length;
+                const centerX = matchCells.reduce((sum, c) => sum + c[1], 0) / matchCells.length;
                 const score = this.calculateScore(matchCells.length);
                 this.animator.playScorePopup(centerX, centerY, score, this.currentCombo);
             }
@@ -774,7 +772,6 @@ class Game {
             this.board.removeMatches(matches, this.config.bombRange);
         }
 
-        console.log('[DEBUG] Before stopAnimationLoop, activeAnimations:', this.animator.activeAnimations.length);
         this.stopAnimationLoop();
 
         // UI 업데이트

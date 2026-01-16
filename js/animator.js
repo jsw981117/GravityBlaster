@@ -147,7 +147,6 @@ class Animator {
 
     // 점수 팝업 애니메이션
     playScorePopup(x, y, score, combo = 0) {
-        console.log('[DEBUG] playScorePopup called:', { x, y, score, combo, duration: this.scoreAnimDuration });
         return new Promise(resolve => {
             const anim = {
                 type: 'score',
@@ -162,7 +161,6 @@ class Animator {
             };
 
             this.activeAnimations.push(anim);
-            console.log('[DEBUG] Added to activeAnimations, total count:', this.activeAnimations.length);
             this.start();
         });
     }
@@ -305,16 +303,14 @@ class Animator {
                     // 위로 이동 + fade
                     const offsetY = -this.scorePopupDistance * anim.progress;
                     const alpha = 1.0 - anim.progress;
-                    const popupData = {
+                    state.scorePopups.push({
                         x: anim.x,
                         y: anim.y,
                         offsetY: offsetY,
                         score: anim.score,
                         combo: anim.combo,
                         alpha: alpha
-                    };
-                    state.scorePopups.push(popupData);
-                    console.log('[DEBUG] Score popup in state:', popupData);
+                    });
                     break;
 
                 case 'turn':
