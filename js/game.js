@@ -774,6 +774,7 @@ class Game {
             this.board.removeMatches(matches, this.config.bombRange);
         }
 
+        console.log('[DEBUG] Before stopAnimationLoop, activeAnimations:', this.animator.activeAnimations.length);
         this.stopAnimationLoop();
 
         // UI 업데이트

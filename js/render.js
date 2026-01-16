@@ -280,9 +280,14 @@ class Renderer {
         }
 
         // 점수 팝업 렌더링
+        if (animState.scorePopups.length > 0) {
+            console.log('[DEBUG] Rendering score popups, count:', animState.scorePopups.length);
+        }
         for (let popup of animState.scorePopups) {
             const px = popup.x * this.cellSize + this.cellSize / 2;
             const py = popup.y * this.cellSize + this.cellSize / 2 + (popup.offsetY || 0);
+
+            console.log('[DEBUG] Rendering popup at:', { px, py, score: popup.score, alpha: popup.alpha });
 
             this.ctx.save();
             this.ctx.globalAlpha = popup.alpha;
