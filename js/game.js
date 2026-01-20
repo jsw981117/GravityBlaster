@@ -875,6 +875,7 @@ class Game {
     // 재시작
     restart() {
         this.ui.hideGameOver();
+        this.startAnimationLoop();
         this.init();
     }
 }
