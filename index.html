@@ -12,7 +12,8 @@
     <!-- 메인화면 -->
     <div id="main-menu">
         <h1>GRAVITY LINE</h1>
-        <button id="start-btn" class="menu-btn">게임 시작</button>
+        <button id="target-mode-btn" class="menu-btn">타겟 모드</button>
+        <button id="timeattack-mode-btn" class="menu-btn">타임 어택</button>
         <button id="tutorial-btn" class="menu-btn">튜토리얼</button>
     </div>
 
@@ -29,14 +30,26 @@
             </div>
 
             <div class="tutorial-section">
-                <h3>게임 방식</h3>
+                <h3>기본 규칙</h3>
                 <p>• 6x6 그리드에서 블록이 생성됩니다</p>
                 <p>• <strong>스와이프 또는 WASD/방향키</strong>로 중력 방향 변경</p>
                 <p>• 같은 색 블록 3개 이상 인접(상하좌우)하면 제거</p>
                 <p>• 4개부터 보너스 점수, 연쇄로 추가 점수</p>
                 <p>• 중력 적용 시 블록이 분해되어 개별 이동</p>
+            </div>
+
+            <div class="tutorial-section">
+                <h3>타겟 모드</h3>
                 <p>• <strong>타겟 색상을 모두 제거하면 턴 회복!</strong></p>
-                <p>• 남은 턴이 0이 되면 게임 오버!</p>
+                <p>• 남은 턴이 0이 되면 게임 오버</p>
+                <p>• 타임 셀로 턴 추가 가능</p>
+            </div>
+
+            <div class="tutorial-section">
+                <h3>타임 어택 모드</h3>
+                <p>• <strong>제한 시간 내에 최대한 높은 점수!</strong></p>
+                <p>• 턴과 타겟 제한 없음</p>
+                <p>• 시간이 0이 되면 게임 오버</p>
             </div>
 
             <button id="tutorial-start-btn" class="menu-btn">게임 시작</button>
@@ -62,6 +75,13 @@
             <div id="target-container">
                 <div id="target-header">TARGET</div>
                 <div id="target-list"></div>
+            </div>
+            <div id="timer-container" class="hidden">
+                <div id="timer-header">TIME</div>
+                <div id="timer-gauge-bg">
+                    <div id="timer-gauge-fill"></div>
+                </div>
+                <div id="timer-text">60</div>
             </div>
             <div id="preview-container">
                 <canvas id="preview-canvas"></canvas>

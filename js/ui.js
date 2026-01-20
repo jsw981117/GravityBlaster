@@ -18,8 +18,12 @@ class UI {
 
         this.showGridCheckbox = document.getElementById('show-grid');
         this.targetHeader = document.getElementById('target-header');
+        this.targetContainer = document.getElementById('target-container');
+        this.timerContainer = document.getElementById('timer-container');
+        this.timerText = document.getElementById('timer-text');
+        this.timerGaugeFill = document.getElementById('timer-gauge-fill');
 
-        this.targetTextSize = 16; // 기본값
+        this.targetTextSize = 16;
 
         this.setupMenuEvents();
         this.setupSettingsEvents();
@@ -27,9 +31,14 @@ class UI {
     }
 
     setupMenuEvents() {
-        // 게임 시작 버튼
-        document.getElementById('start-btn').onclick = () => {
-            if (this.onStartGame) this.onStartGame();
+        // 타겟 모드 버튼
+        document.getElementById('target-mode-btn').onclick = () => {
+            if (this.onStartTargetMode) this.onStartTargetMode();
+        };
+
+        // 타임 어택 버튼
+        document.getElementById('timeattack-mode-btn').onclick = () => {
+            if (this.onStartTimeAttack) this.onStartTimeAttack();
         };
 
         // 튜토리얼 버튼
@@ -40,7 +49,7 @@ class UI {
         // 튜토리얼 내 게임 시작 버튼
         document.getElementById('tutorial-start-btn').onclick = () => {
             this.hideTutorial();
-            if (this.onStartGame) this.onStartGame();
+            if (this.onStartTargetMode) this.onStartTargetMode();
         };
 
         // 튜토리얼 오버레이 클릭 시 닫기
@@ -215,6 +224,30 @@ class UI {
             this.turnLabel.textContent = 'TURN';
             this.turnsEl.textContent = turns;
         }
+    }
+
+    // 게임 모드 설정 (UI 표시/숨김)
+    setGameMode(mode) {
+        if (mode === 'target') {
+            this.turnContainer.classList.remove('hidden');
+            this.targetContainer.classList.remove('hidden');
+            this.timerContainer.classList.add('hidden');
+        } else if (mode === 'timeattack') {
+            this.turnContainer.classList.add('hidden');
+            this.targetContainer.classList.add('hidden');
+            this.timerContainer.classList.remove('hidden');
+        }
+    }
+
+    // 타이머 업데이트
+    updateTimer(remainingTime, timeLimit) {
+        if (!this.timerText || !this.timerGaugeFill) return;
+
+        const seconds = Math.ceil(remainingTime);
+        this.timerText.textContent = seconds;
+
+        const percentage = (remainingTime / timeLimit) * 100;
+        this.timerGaugeFill.style.width = `${Math.max(0, percentage)}%`;
     }
 
     setTargetTextSize(size) {

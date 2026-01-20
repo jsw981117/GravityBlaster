@@ -17,6 +17,7 @@ class Game {
         this.state = 'waiting'; // waiting | animating | gameover | paused
         this.paused = false;
         this.score = 0;
+        this.gameMode = 'target'; // 'target' | 'timeattack'
 
         // 게임 오버 조건 2 추적 변수
         this.thresholdExceeded = false;
@@ -29,6 +30,11 @@ class Game {
 
         // 턴 시스템
         this.remainingTurns = 10;
+
+        // 타이머 시스템 (타임 어택 모드)
+        this.timeLimit = 60; // 제한 시간 (초)
+        this.remainingTime = 60;
+        this.timerInterval = null;
 
         // 콤보 시스템
         this.currentCombo = 0;
@@ -73,7 +79,8 @@ class Game {
         };
 
         // UI 이벤트 연결
-        this.ui.onStartGame = () => this.startGame();
+        this.ui.onStartTargetMode = () => this.startGame('target');
+        this.ui.onStartTimeAttack = () => this.startGame('timeattack');
         this.ui.onApplyDebug = () => this.applyDebugConfig();
         this.ui.onResetDebug = () => this.resetDebugConfig();
         this.ui.onGridToggle = () => {
@@ -169,8 +176,11 @@ class Game {
         alert('기본값으로 되돌렸습니다.');
     }
 
-    startGame() {
-        // 메인화면 숨기고 게임 시작
+    startGame(mode = 'target') {
+        this.gameMode = mode;
+
+        // UI 표시/숨김
+        this.ui.setGameMode(mode);
         this.ui.hideMainMenu();
 
         // canvas가 보이는 상태에서 크기 재계산
@@ -194,14 +204,22 @@ class Game {
         this.thresholdExceeded = false;
         this.turnsAfterThreshold = 0;
 
-        // 타겟 시스템 초기화
-        this.currentTargetCount = 2;
-        this.generateTargets();
-        this.removedCells = {};
+        // 모드별 초기화
+        if (this.gameMode === 'target') {
+            // 타겟 시스템 초기화
+            this.currentTargetCount = 2;
+            this.generateTargets();
+            this.removedCells = {};
 
-        // 턴 시스템 초기화
-        this.remainingTurns = 10;
-        this.ui.updateTurns(this.remainingTurns);
+            // 턴 시스템 초기화
+            this.remainingTurns = 10;
+            this.ui.updateTurns(this.remainingTurns);
+        } else if (this.gameMode === 'timeattack') {
+            // 타이머 초기화
+            this.remainingTime = this.timeLimit;
+            this.ui.updateTimer(this.remainingTime, this.timeLimit);
+            this.startTimer();
+        }
 
         // 콤보 시스템 초기화
         this.currentCombo = 0;
@@ -258,6 +276,32 @@ class Game {
             }
         }
         return true;
+    }
+
+    // 타이머 시작
+    startTimer() {
+        this.stopTimer();
+        this.timerInterval = setInterval(() => {
+            if (this.state === 'waiting' && !this.paused) {
+                this.remainingTime -= 0.1;
+
+                if (this.remainingTime <= 0) {
+                    this.remainingTime = 0;
+                    this.stopTimer();
+                    this.gameOver();
+                }
+
+                this.ui.updateTimer(this.remainingTime, this.timeLimit);
+            }
+        }, 100);
+    }
+
+    // 타이머 정지
+    stopTimer() {
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
     }
 
     // 타겟 진행 상황 업데이트
@@ -617,8 +661,8 @@ class Game {
                 const wasInCombo = this.currentCombo > 0;
                 this.currentCombo = 0;
 
-                // 콤보 종료 시 턴 0이면 게임 오버
-                if (wasInCombo && this.remainingTurns === 0) {
+                // 타겟 모드: 콤보 종료 시 턴 0이면 게임 오버
+                if (this.gameMode === 'target' && wasInCombo && this.remainingTurns === 0) {
                     this.gameOver();
                     return;
                 }
@@ -639,53 +683,56 @@ class Game {
                 await this.animator.playSpawn(spawnData);
             }
 
-            // 타겟 완료 체크 (조건 3, 턴 감소 전)
-            if (this.config.gameOverMode === 3) {
-                if (this.checkTargetsCompleted()) {
-                    // TARGET COMPLETE 애니메이션 (병렬 실행)
-                    this.animator.playTargetComplete(this.config.targetCompleteDuration);
+            // 타겟 모드 전용 로직
+            if (this.gameMode === 'target') {
+                // 타겟 완료 체크 (조건 3, 턴 감소 전)
+                if (this.config.gameOverMode === 3) {
+                    if (this.checkTargetsCompleted()) {
+                        // TARGET COMPLETE 애니메이션 (병렬 실행)
+                        this.animator.playTargetComplete(this.config.targetCompleteDuration);
 
-                    // 턴 회복 (최대 20), 타겟 개수 +1, 새 타겟 생성
-                    this.remainingTurns = Math.min(20, this.remainingTurns + this.config.turnRecovery);
-                    this.currentTargetCount = Math.min(10, this.currentTargetCount + 1);
-                    this.generateTargets();
-                    this.removedCells = {};
-                    this.ui.updateTurns(this.remainingTurns, this.currentCombo > 0);
-                }
-            }
-
-            // 턴 감소 (콤보 중일 때는 0 미만으로 가지 않음)
-            this.remainingTurns = Math.max(0, this.remainingTurns - 1);
-            this.ui.updateTurns(this.remainingTurns, this.currentCombo > 0);
-
-            // 게임 오버 조건 체크 (조건 2: 임계값+N턴)
-            if (this.config.gameOverMode === 2) {
-                const cellCount = this.board.getCellCount();
-                const totalCells = this.board.size * this.board.size;
-                const percentage = (cellCount / totalCells) * 100;
-
-                if (percentage >= this.config.cellThreshold) {
-                    if (!this.thresholdExceeded) {
-                        this.thresholdExceeded = true;
-                        this.turnsAfterThreshold = 0;
+                        // 턴 회복 (최대 20), 타겟 개수 +1, 새 타겟 생성
+                        this.remainingTurns = Math.min(20, this.remainingTurns + this.config.turnRecovery);
+                        this.currentTargetCount = Math.min(10, this.currentTargetCount + 1);
+                        this.generateTargets();
+                        this.removedCells = {};
+                        this.ui.updateTurns(this.remainingTurns, this.currentCombo > 0);
                     }
                 }
 
-                if (this.thresholdExceeded) {
-                    this.turnsAfterThreshold++;
-                    if (this.turnsAfterThreshold >= this.config.turnsAfterThreshold) {
+                // 턴 감소 (콤보 중일 때는 0 미만으로 가지 않음)
+                this.remainingTurns = Math.max(0, this.remainingTurns - 1);
+                this.ui.updateTurns(this.remainingTurns, this.currentCombo > 0);
+
+                // 게임 오버 조건 체크 (조건 2: 임계값+N턴)
+                if (this.config.gameOverMode === 2) {
+                    const cellCount = this.board.getCellCount();
+                    const totalCells = this.board.size * this.board.size;
+                    const percentage = (cellCount / totalCells) * 100;
+
+                    if (percentage >= this.config.cellThreshold) {
+                        if (!this.thresholdExceeded) {
+                            this.thresholdExceeded = true;
+                            this.turnsAfterThreshold = 0;
+                        }
+                    }
+
+                    if (this.thresholdExceeded) {
+                        this.turnsAfterThreshold++;
+                        if (this.turnsAfterThreshold >= this.config.turnsAfterThreshold) {
+                            this.gameOver();
+                            return;
+                        }
+                    }
+                }
+
+                // 게임 오버 조건 체크 (조건 3: 타겟 기반)
+                if (this.config.gameOverMode === 3) {
+                    if (this.remainingTurns <= 0 && this.currentCombo === 0) {
+                        // 턴 0 + 콤보 아님 = 게임 오버
                         this.gameOver();
                         return;
                     }
-                }
-            }
-
-            // 게임 오버 조건 체크 (조건 3: 타겟 기반)
-            if (this.config.gameOverMode === 3) {
-                if (this.remainingTurns <= 0 && this.currentCombo === 0) {
-                    // 턴 0 + 콤보 아님 = 게임 오버
-                    this.gameOver();
-                    return;
                 }
             }
 
@@ -742,8 +789,8 @@ class Game {
                 this.animator.playScorePopup(centerX, centerY, score, this.currentCombo);
             }
 
-            // 제거된 셀 색상 추적 (타겟 시스템용)
-            if (this.config.gameOverMode === 3) {
+            // 제거된 셀 색상 추적 (타겟 모드)
+            if (this.gameMode === 'target' && this.config.gameOverMode === 3) {
                 for (let cell of removeCells) {
                     // 특수 셀은 타겟 카운트에서 제외
                     if (cell.color !== BOOM_COLOR && cell.color !== TIME_COLOR) {
@@ -752,17 +799,19 @@ class Game {
                 }
             }
 
-            // 타임 셀 효과: 턴 증가 (최대 20)
-            const timeCells = removeCells.filter(cell => cell.color === TIME_COLOR);
-            if (timeCells.length > 0) {
-                const turnBonus = timeCells.length * this.config.timeCellTurnBonus;
-                this.remainingTurns = Math.min(20, this.remainingTurns + turnBonus);
-                this.ui.updateTurns(this.remainingTurns, this.currentCombo > 0);
+            // 타임 셀 효과: 턴 증가 (타겟 모드)
+            if (this.gameMode === 'target') {
+                const timeCells = removeCells.filter(cell => cell.color === TIME_COLOR);
+                if (timeCells.length > 0) {
+                    const turnBonus = timeCells.length * this.config.timeCellTurnBonus;
+                    this.remainingTurns = Math.min(20, this.remainingTurns + turnBonus);
+                    this.ui.updateTurns(this.remainingTurns, this.currentCombo > 0);
 
-                // 턴 증가 팝업 애니메이션
-                const centerY = timeCells.reduce((sum, c) => sum + c.y, 0) / timeCells.length;
-                const centerX = timeCells.reduce((sum, c) => sum + c.x, 0) / timeCells.length;
-                this.animator.playTurnPopup(centerX, centerY, turnBonus);
+                    // 턴 증가 팝업 애니메이션
+                    const centerY = timeCells.reduce((sum, c) => sum + c.y, 0) / timeCells.length;
+                    const centerX = timeCells.reduce((sum, c) => sum + c.x, 0) / timeCells.length;
+                    this.animator.playTurnPopup(centerX, centerY, turnBonus);
+                }
             }
 
             // 매치 제거
@@ -772,8 +821,8 @@ class Game {
         // UI 업데이트
         this.ui.updateGravityIndicator(direction);
 
-        // 타겟 진행 상황 업데이트
-        if (this.config.gameOverMode === 3) {
+        // 타겟 진행 상황 업데이트 (타겟 모드)
+        if (this.gameMode === 'target' && this.config.gameOverMode === 3) {
             this.updateTargetProgress();
         }
 
@@ -860,6 +909,7 @@ class Game {
     // 게임 오버
     gameOver() {
         this.state = 'gameover';
+        this.stopTimer();
         this.stopAnimationLoop();
         this.ui.showGameOver(this.score, () => this.restart());
     }
