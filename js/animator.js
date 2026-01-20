@@ -184,6 +184,25 @@ class Animator {
         });
     }
 
+    // 시간 증가 팝업 애니메이션 (타임 어택 모드)
+    playTimePopup(x, y, timeBonus) {
+        return new Promise(resolve => {
+            const anim = {
+                type: 'time',
+                x: x,
+                y: y,
+                timeBonus: timeBonus,
+                startTime: performance.now(),
+                duration: this.scoreAnimDuration,
+                progress: 0,
+                resolve: resolve
+            };
+
+            this.activeAnimations.push(anim);
+            this.start();
+        });
+    }
+
     // 타겟 완료 애니메이션
     playTargetComplete(duration) {
         return new Promise(resolve => {
@@ -225,6 +244,7 @@ class Animator {
             spawnCells: [],
             scorePopups: [],
             turnPopups: [],
+            timePopups: [],
             targetCompletePopups: [],
             explosions: this.explosions
         };
@@ -323,6 +343,19 @@ class Animator {
                         offsetY: turnOffsetY,
                         turnBonus: anim.turnBonus,
                         alpha: turnAlpha
+                    });
+                    break;
+
+                case 'time':
+                    // 위로 이동 + fade
+                    const timeOffsetY = -this.scorePopupDistance * anim.progress;
+                    const timeAlpha = 1.0 - anim.progress;
+                    state.timePopups.push({
+                        x: anim.x,
+                        y: anim.y,
+                        offsetY: timeOffsetY,
+                        timeBonus: anim.timeBonus,
+                        alpha: timeAlpha
                     });
                     break;
 

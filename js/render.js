@@ -330,6 +330,24 @@ class Renderer {
             this.ctx.restore();
         }
 
+        // 시간 증가 팝업 렌더링
+        for (let popup of animState.timePopups) {
+            const px = popup.x * this.cellSize + this.cellSize / 2;
+            const py = popup.y * this.cellSize + this.cellSize / 2 + (popup.offsetY || 0);
+
+            this.ctx.save();
+            this.ctx.globalAlpha = popup.alpha;
+            this.ctx.font = `bold ${this.cellSize * 0.4}px Arial`;
+            this.ctx.fillStyle = '#4ECDC4'; // 청록색
+            this.ctx.strokeStyle = '#000';
+            this.ctx.lineWidth = 2;
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.strokeText(`+${popup.timeBonus} SECOND`, px, py);
+            this.ctx.fillText(`+${popup.timeBonus} SECOND`, px, py);
+            this.ctx.restore();
+        }
+
         // 타겟 완료 팝업 렌더링
         for (let popup of animState.targetCompletePopups) {
             const centerX = this.canvas.width / 2;

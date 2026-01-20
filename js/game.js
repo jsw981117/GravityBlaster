@@ -49,7 +49,8 @@ class Game {
             boomRange: 1,               // 봄 셀 폭발 범위
             boomCellWeight: 50,         // 봄 셀 가중치
             timeCellWeight: 50,         // 타임 셀 가중치
-            timeCellTurnBonus: 5,       // 타임 셀 턴 증가량
+            timeCellTurnBonus: 5,       // 타임 셀 턴 증가량 (타겟 모드)
+            timeCellTimeBonus: 5,       // 타임 셀 시간 증가량 (타임 어택 모드)
             boardSize: 6,
             removeAnimDuration: 150,
             moveAnimDuration: 200,
@@ -147,6 +148,7 @@ class Game {
             boomCellWeight: 50,
             timeCellWeight: 50,
             timeCellTurnBonus: 5,
+            timeCellTimeBonus: 5,
             boardSize: 6,
             removeAnimDuration: 150,
             moveAnimDuration: 200,
@@ -282,7 +284,7 @@ class Game {
     startTimer() {
         this.stopTimer();
         this.timerInterval = setInterval(() => {
-            if (this.state === 'waiting' && !this.paused) {
+            if (this.gameMode === 'timeattack' && !this.paused && this.state !== 'gameover') {
                 this.remainingTime -= 0.1;
 
                 if (this.remainingTime <= 0) {
@@ -799,18 +801,24 @@ class Game {
                 }
             }
 
-            // 타임 셀 효과: 턴 증가 (타겟 모드)
-            if (this.gameMode === 'target') {
-                const timeCells = removeCells.filter(cell => cell.color === TIME_COLOR);
-                if (timeCells.length > 0) {
+            // 타임 셀 효과
+            const timeCells = removeCells.filter(cell => cell.color === TIME_COLOR);
+            if (timeCells.length > 0) {
+                const centerY = timeCells.reduce((sum, c) => sum + c.y, 0) / timeCells.length;
+                const centerX = timeCells.reduce((sum, c) => sum + c.x, 0) / timeCells.length;
+
+                if (this.gameMode === 'target') {
+                    // 타겟 모드: 턴 증가
                     const turnBonus = timeCells.length * this.config.timeCellTurnBonus;
                     this.remainingTurns = Math.min(20, this.remainingTurns + turnBonus);
                     this.ui.updateTurns(this.remainingTurns, this.currentCombo > 0);
-
-                    // 턴 증가 팝업 애니메이션
-                    const centerY = timeCells.reduce((sum, c) => sum + c.y, 0) / timeCells.length;
-                    const centerX = timeCells.reduce((sum, c) => sum + c.x, 0) / timeCells.length;
                     this.animator.playTurnPopup(centerX, centerY, turnBonus);
+                } else if (this.gameMode === 'timeattack') {
+                    // 타임 어택: 시간 증가
+                    const timeBonus = timeCells.length * this.config.timeCellTimeBonus;
+                    this.remainingTime = Math.min(this.timeLimit, this.remainingTime + timeBonus);
+                    this.ui.updateTimer(this.remainingTime, this.timeLimit);
+                    this.animator.playTimePopup(centerX, centerY, timeBonus);
                 }
             }
 
